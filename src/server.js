@@ -2,6 +2,10 @@
 
 /**
  * server.js — Texpro RSProyecto
+ *
+ * Punto de entrada principal.
+ * Cada módulo de negocio se registra desde src/modules/<módulo>/index.js
+ * La infraestructura técnica vive en src/core/
  */
 
 const path      = require('path');
@@ -15,21 +19,20 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
   process.exit(1);
 }
 
-const { testConnection }    = require('./config/db');
-const authRoutes            = require('./routes/auth');
-const recuperarRoutes       = require('./routes/recuperar');
-const ventasRoutes          = require('./routes/ventas');
-const dashboardRoutes       = require('./routes/dashboard');
-const adminRoutes           = require('./routes/admin');
-const notificacionesRoutes  = require('./routes/notificaciones');
-const carteraRoutes         = require('./routes/cartera');
-const alertasRoutes         = require('./routes/alertas');
+const { testConnection } = require('./core/config/db');
+
+// ── Módulos de negocio ────────────────────────────────────────────
+const authModule          = require('./modules/auth');
+const ventasModule        = require('./modules/ventas');
+const dashboardModule     = require('./modules/dashboard');
+const adminModule         = require('./modules/admin');
+const notificacionesModule = require('./modules/notificaciones');
+const carteraModule       = require('./modules/cartera');
+const alertasModule       = require('./modules/alertas');
 
 const app  = express();
 const PORT = Number(process.env.PORT || 3000);
 
-// ── Proxy confiable (Render / Railway usan proxy inverso)
-// Necesario para que express-rate-limit lea correctamente X-Forwarded-For
 app.set('trust proxy', 1);
 
 const CDN_SCRIPTS = [
@@ -77,7 +80,7 @@ const loginLimiter = rateLimit({
   handler: (req, res, next, options) => {
     console.warn(`[SEGURIDAD] Rate limit — IP: ${req.ip} | ${new Date().toISOString()}`);
     res.status(429).json(options.message);
-  }
+  },
 });
 
 const apiLimiter = rateLimit({
@@ -104,18 +107,20 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
+// ── Registro de rutas ─────────────────────────────────────────────
 app.use('/api', apiLimiter);
-app.use('/api/auth/login',      loginLimiter);
-app.use('/api/auth/refresh',    loginLimiter);
-app.use('/api/auth',            authRoutes);
-app.use('/api/auth',            recuperarRoutes);
-app.use('/api/ventas',          ventasRoutes);
-app.use('/api/dashboard',       dashboardRoutes);
-app.use('/api/admin',           adminRoutes);
-app.use('/api/notificaciones',  notificacionesRoutes);
-app.use('/api/cartera',         carteraRoutes);
-app.use('/api/alertas',         alertasRoutes);
+app.use('/api/auth/login',   loginLimiter);
+app.use('/api/auth/refresh', loginLimiter);
 
+app.use('/api/auth',          authModule);
+app.use('/api/ventas',        ventasModule);
+app.use('/api/dashboard',     dashboardModule);
+app.use('/api/admin',         adminModule);
+app.use('/api/notificaciones', notificacionesModule);
+app.use('/api/cartera',       carteraModule);
+app.use('/api/alertas',       alertasModule);
+
+// ── Manejo de errores ─────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ ok: false, error: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });
 });
