@@ -24,6 +24,7 @@ const adminRoutes           = require('./routes/admin');
 const notificacionesRoutes  = require('./routes/notificaciones');
 const carteraRoutes         = require('./routes/cartera');
 const alertasRoutes         = require('./routes/alertas');
+const gerenciaRoutes        = require('./routes/gerencia');
 
 const app  = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -110,6 +111,7 @@ app.use('/api/admin',           adminRoutes);
 app.use('/api/notificaciones',  notificacionesRoutes);
 app.use('/api/cartera',         carteraRoutes);
 app.use('/api/alertas',         alertasRoutes);
+app.use('/api/gerencia',        gerenciaRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ ok: false, error: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });

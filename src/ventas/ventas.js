@@ -76,9 +76,7 @@
     { nombre:'Cobranza',      icon:'💰', url:'../cobranza/index.html',     area:['cobranza','contabilidad','gerencia'] },
     { nombre:'RRHH',          icon:'👥', url:'../rrhh/index.html',         area:['rrhh','gerencia'] },
     { nombre:'Contabilidad',  icon:'📜', url:'../contabilidad/index.html', area:['contabilidad','gerencia'] },
-    { nombre:'Administración',icon:'🔧', url:'../admin/index.html',        area:['admin'] },
-  ];
-
+  { nombre:'Gerencia',      icon:'📈', url:'../gerencia/index.html',     area:['gerencia'] },
   function cargarSidebar(usuario) {
     const ini = (usuario.nombre || 'U').split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
     document.getElementById('userName').textContent   = usuario.nombre  || usuario.email;
