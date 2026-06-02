@@ -25,7 +25,11 @@ const COD_VENDEDOR_RE = /^[A-Za-z0-9-]{1,20}$/;
  * @returns {number}
  */
 function validateFolio(value) {
-  const n = parseInt(value, 10);
+  const s = String(value ?? '').trim();
+  if (!/^\d+$/.test(s)) {
+    throw new Error(`Folio inválido: "${value}". Debe ser un entero positivo.`);
+  }
+  const n = parseInt(s, 10);
   if (!Number.isFinite(n) || n <= 0 || n > 9_999_999) {
     throw new Error(`Folio inválido: "${value}". Debe ser un entero positivo.`);
   }
@@ -65,11 +69,28 @@ function validatePorcentaje(value) {
  * @returns {number}
  */
 function validateId(value) {
-  const n = parseInt(value, 10);
+  const s = String(value ?? '').trim();
+  if (!/^\d+$/.test(s)) {
+    throw new Error(`ID inválido: "${value}". Debe ser un entero positivo.`);
+  }
+  const n = parseInt(s, 10);
   if (!Number.isFinite(n) || n <= 0) {
     throw new Error(`ID inválido: "${value}". Debe ser un entero positivo.`);
   }
   return n;
 }
 
-module.exports = { validateFolio, validateCodVendedor, validatePorcentaje, validateId };
+/**
+ * Valida y retorna una dirección de email normalizada (lowercase, trimmed).
+ * @param {any} value
+ * @returns {string}
+ */
+function validateEmail(value) {
+  const email = String(value || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    throw new Error(`Email inválido: "${email}"`);
+  }
+  return email;
+}
+
+module.exports = { validateFolio, validateCodVendedor, validatePorcentaje, validateId, validateEmail };

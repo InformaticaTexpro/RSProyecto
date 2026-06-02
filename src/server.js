@@ -29,6 +29,10 @@ const gerenciaRoutes        = require('./routes/gerencia');
 const app  = express();
 const PORT = Number(process.env.PORT || 3000);
 
+// ── Proxy confiable (Render / Railway usan proxy inverso)
+// Necesario para que express-rate-limit lea correctamente X-Forwarded-For
+app.set('trust proxy', 1);
+
 const CDN_SCRIPTS = [
   'https://cdn.jsdelivr.net',
   'https://cdnjs.cloudflare.com',
@@ -103,6 +107,7 @@ app.get('/api/health', async (_req, res) => {
 
 app.use('/api', apiLimiter);
 app.use('/api/auth/login',      loginLimiter);
+app.use('/api/auth/refresh',    loginLimiter);
 app.use('/api/auth',            authRoutes);
 app.use('/api/auth',            recuperarRoutes);
 app.use('/api/ventas',          ventasRoutes);

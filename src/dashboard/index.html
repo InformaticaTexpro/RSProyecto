@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../assets/styles/tokens.css?v=2.3.0" />
   <link rel="stylesheet" href="dashboard.css?v=2.3.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 </head>
 <body>
 
@@ -140,7 +141,7 @@
               <div class="cartera-card-info">
                 <span class="cartera-card-label">ACTIVOS</span>
                 <span class="cartera-card-count" id="countActivo">—</span>
-                <span class="cartera-card-desc">Compraron en los últimos 90 días</span>
+                <span class="cartera-card-desc">Compraron en el mes actual</span>
               </div>
               <svg class="cartera-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
             </button>
@@ -176,7 +177,7 @@
               </div>
               <div class="cartera-tabla-wrapper">
                 <table class="dash-tabla cartera-tabla">
-                  <thead><tr><th>Cód. Cliente</th><th>Nombre</th><th>Teléfono 1</th><th>Teléfono 2</th><th>Email</th></tr></thead>
+                  <thead><tr><th>Cód. </th><th>Nombre</th><th>Teléfono 1</th><th>Teléfono 2</th><th>Email</th></tr></thead>
                   <tbody id="tbodyInactivo"><tr class="tabla-empty"><td colspan="5">Cargando...</td></tr></tbody>
                 </table>
               </div>
@@ -202,8 +203,34 @@
               </div>
               <div class="cartera-tabla-wrapper">
                 <table class="dash-tabla cartera-tabla">
+                  <thead><tr><th>Cód. Cliente</th><th>Nombre</th><th>Teléfono 1</th><th>Teléfono 2</th><th>Email</th><th>Penult. Factura</th><th>Últ. Factura</th><th style="text-align:right">Días Recuperado</th></tr></thead>
+                  <tbody id="tbodyRecuperado"><tr class="tabla-empty"><td colspan="8">Cargando...</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- SIN COMPRAS -->
+          <div class="cartera-card cartera-card--sincompras" id="cardSincompras">
+            <button class="cartera-card-btn" data-tipo="sincompras" aria-expanded="false">
+              <div class="cartera-card-icono">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" x2="16" y1="12" y2="12"/></svg>
+              </div>
+              <div class="cartera-card-info">
+                <span class="cartera-card-label">SIN COMPRAS</span>
+                <span class="cartera-card-count" id="countSincompras">—</span>
+                <span class="cartera-card-desc">Registrados sin ningún folio histórico</span>
+              </div>
+              <svg class="cartera-chevron" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="cartera-lista" id="listaSincompras" hidden>
+              <div class="cartera-lista-busqueda">
+                <input type="text" class="cartera-busqueda-input" id="busquedaSincompras" placeholder="Buscar cliente..." />
+              </div>
+              <div class="cartera-tabla-wrapper">
+                <table class="dash-tabla cartera-tabla">
                   <thead><tr><th>Cód. Cliente</th><th>Nombre</th><th>Teléfono 1</th><th>Teléfono 2</th><th>Email</th></tr></thead>
-                  <tbody id="tbodyRecuperado"><tr class="tabla-empty"><td colspan="5">Cargando...</td></tr></tbody>
+                  <tbody id="tbodySincompras"><tr class="tabla-empty"><td colspan="5">Cargando...</td></tr></tbody>
                 </table>
               </div>
             </div>
@@ -212,6 +239,39 @@
         </div>
       </section>
       <!-- ══ FIN CARTERA ══════════════════════════════════════════════════ -->
+
+      <!-- Tabla Clientes del Período -->
+      <section class="tabla-seccion">
+        <div class="tabla-card">
+          <div class="tabla-header"><h3 class="tabla-titulo">Clientes por Vendedor</h3></div>
+          <div class="clientes-split">
+            <!-- Mitad izquierda: tabla -->
+            <div class="clientes-split__tabla">
+              <div class="tabla-wrapper">
+                <table class="dash-tabla">
+                  <thead>
+                    <tr>
+                      <th>Cód. Vendedor</th>
+                      <th style="text-align:right">Clientes Históricos</th>
+                      <th style="text-align:right">Clientes Mensuales</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyClientesResumen"><tr class="tabla-empty"><td colspan="3">Cargando...</td></tr></tbody>
+                  <tfoot id="tfootClientesResumen"></tfoot>
+                </table>
+              </div>
+            </div>
+            <!-- Mitad derecha: gráfico de tortas -->
+            <div class="clientes-split__grafico">
+              <div id="tortaVendedorTabs" class="torta-vendedor-tabs" style="display:none"></div>
+              <p class="grafico-torta-titulo">Distribución por Categoría</p>
+              <div class="grafico-torta-wrapper">
+                <canvas id="graficoClientesDistribucion"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <!-- Tabla Vendedores -->
       <section class="tabla-seccion">
@@ -228,6 +288,7 @@
                 </tr>
               </thead>
               <tbody id="tbodyVendedores"><tr class="tabla-empty"><td colspan="6">Cargando...</td></tr></tbody>
+              <tfoot id="tfootVendedores"></tfoot>
             </table>
           </div>
         </div>
@@ -253,11 +314,12 @@
                 <tr>
                   <th>Folio</th><th>Fecha</th><th>Cliente</th><th>Vendedor</th>
                   <th style="text-align:right">Monto</th>
+                  <th style="text-align:right">TotLineaReal</th>
                   <th style="text-align:right">Descuento</th>
                   <th>Detalle</th>
                 </tr>
               </thead>
-              <tbody id="tbodyVentasMes"><tr class="tabla-empty"><td colspan="7">Cargando...</td></tr></tbody>
+              <tbody id="tbodyVentasMes"><tr class="tabla-empty"><td colspan="8">Cargando...</td></tr></tbody>
             </table>
           </div>
           <div class="tabla-footer"><span class="tabla-total" id="totalVentasMes">0 registros</span></div>
@@ -312,28 +374,8 @@
         </div>
       </section>
 
-      <!-- Panel Folios Recibidos -->
-      <section class="panel-compartidos" id="panelCompartidos" style="display:none">
-        <div class="panel-coord-header">
-          <h2 class="panel-coord-titulo">📥 Folios recibidos</h2>
-          <p class="panel-coord-sub">Folios que un coordinador te ha asignado este mes</p>
-        </div>
-        <div class="tabla-card">
-          <div class="tabla-wrapper">
-            <table class="dash-tabla">
-              <thead>
-                <tr>
-                  <th>Folio</th><th>Fecha</th><th>Cliente</th><th>Coordinador</th>
-                  <th style="text-align:right">%</th>
-                  <th style="text-align:right">Monto asignado</th>
-                </tr>
-              </thead>
-              <tbody id="tbodyCompartidos"><tr class="tabla-empty"><td colspan="6">Cargando...</td></tr></tbody>
-            </table>
-          </div>
-          <div class="tabla-footer"><span class="tabla-total" id="totalCompartidos">0 registros</span></div>
-        </div>
-      </section>
+
+
 
     </main>
   </div>
@@ -395,8 +437,9 @@
       color: #fff;
       border-color: var(--color-primary, #01696f);
     }
-    .filtro-select--sm { font-size: .82rem; padding: .3rem .5rem; height: 34px; }
   </style>
+
+
 
   <script src="dashboard.js?v=2.3.1"></script>
   <script src="../assets/js/inactividad.js?v=2.3.0"></script>

@@ -14,11 +14,12 @@
   const API_CART   = '/api/cartera';
   const token      = () => localStorage.getItem('token');
 
-  let graficoEvolucion  = null;
-  let todosVendedores   = [];
+  let graficoEvolucion              = null;
+  let graficoClientesDistribucion   = null;
+  let todosVendedores               = [];
 
-  let carteraData = { activos: [], inactivos: [], recuperados: [] };
-  let carteraRendered = { activo: false, inactivo: false, recuperado: false };
+  let carteraData = { activos: [], inactivos: [], recuperados: [], sinCompras: [] };
+  let carteraRendered = { activo: false, inactivo: false, recuperado: false, sincompras: false };
 
   let filtroVendedorActivo = '';
   let tiposActivos = new Set(['F', 'N', 'D']);
@@ -33,6 +34,15 @@
   function setText(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
+  }
+
+  function escHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+  }
+
+  if (window.Chart && window.ChartDataLabels) {
+    window.Chart.register(window.ChartDataLabels);
   }
 
   function setStyle(id, prop, value) {
@@ -101,6 +111,7 @@
     { nombre:'Facturación',   icon:'🧾', url:'../facturacion/index.html',  area:['facturacion','contabilidad','gerencia'] },
     { nombre:'Bodega',        icon:'🏭', url:'../bodega/index.html',       area:['bodega','produccion','gerencia'] },
     { nombre:'Producción',    icon:'⚙️', url:'../produccion/index.html',   area:['produccion','gerencia'] },
+    { nombre:'Serv. TEC',     icon:'🛠️', url:'../servicio-tecnico/index.html', area:['servicio-tecnico','servicio','gerencia'] },
     { nombre:'Laboratorio',   icon:'🧪', url:'../laboratorio/index.html',  area:['laboratorio','gerencia'] },
     { nombre:'Cobranza',      icon:'💰', url:'../cobranza/index.html',     area:['cobranza','contabilidad','gerencia'] },
     { nombre:'RRHH',          icon:'👥', url:'../rrhh/index.html',         area:['rrhh','gerencia'] },
@@ -226,6 +237,7 @@
           responsive:true, maintainAspectRatio:false,
           interaction:{ mode:'index', intersect:false },
           plugins:{
+            datalabels:{ display:false },
             legend:{ position:'top', labels:{ font:{ family:'Montserrat', size:12 }, usePointStyle:true } },
             tooltip:{ callbacks:{ label:ctx2 => ` ${ctx2.dataset.label}: ${new Intl.NumberFormat('es-CL',{style:'currency',currency:'CLP',maximumFractionDigits:0}).format(ctx2.parsed.y)}` } }
           },
@@ -254,14 +266,25 @@
         const pctDescuento       = Number(v.pctDescuento       || 0);
         return `
         <tr>
-          <td><strong>${v.codVendedor}</strong></td>
-          <td>${v.nombreVendedor || '—'}</td>
+          <td><strong>${escHtml(v.codVendedor)}</strong></td>
+          <td>${escHtml(v.nombreVendedor) || '—'}</td>
           <td>${v.totalFolios}</td>
           <td style="text-align:right">${formatCLP(totalVentasCobrado)}</td>
           <td style="text-align:right">${formatCLP(ventaRealLista)}</td>
           <td style="text-align:right">${pctDescuento > 0 ? pctDescuento + '%' : '—'}</td>
         </tr>`;
       }).join('');
+      const tfoot = document.getElementById('tfootVendedores');
+      if (tfoot) {
+        const sumVentas = data.vendedores.reduce((s, v) => s + Number(v.totalVentasCobrado || 0), 0);
+        const sumLista  = data.vendedores.reduce((s, v) => s + Number(v.ventaRealLista     || 0), 0);
+        tfoot.innerHTML = `<tr>
+          <td colspan="3"><strong>Total</strong></td>
+          <td style="text-align:right"><strong>${formatCLP(sumVentas)}</strong></td>
+          <td style="text-align:right"><strong>${formatCLP(sumLista)}</strong></td>
+          <td></td>
+        </tr>`;
+      }
     } catch (err) { console.error('[cargarVendedores]', err); }
   }
 
@@ -308,19 +331,21 @@
     const tbody = document.getElementById('tbodyVentasMes');
     if (!tbody) return;
     setText('totalVentasMes', `${lista.length.toLocaleString('es-CL')} registros`);
-    if (!lista.length) { tbody.innerHTML = '<tr class="tabla-empty"><td colspan="7">Sin registros</td></tr>'; return; }
+    if (!lista.length) { tbody.innerHTML = '<tr class="tabla-empty"><td colspan="8">Sin registros</td></tr>'; return; }
     tbody.innerHTML = lista.map(v => {
       const pctDesc      = v.pct_descuento > 0 ? `${v.pct_descuento}%` : '—';
       const montoMostrar = v.es_compartido && v.monto_asignado != null ? v.monto_asignado : v.monto;
+      const totLineaReal = Number(v.TotLineaReal || 0);
       const badgeComp    = v.es_compartido
         ? `<span style="font-size:.7rem;background:#00E2A7;color:#000;border-radius:4px;padding:1px 5px;margin-left:4px">Compartido ${v.porcentaje_asignado?v.porcentaje_asignado+'%':''}</span>`
         : '';
       return `<tr>
-        <td><strong>${v.Folio||'—'}</strong>${badgeComp}</td>
-        <td>${v.fecha_formato||'—'}</td>
-        <td>${v.cliente||'—'}</td>
-        <td>${v.CodVendedor||'—'}</td>
+        <td><strong>${escHtml(v.Folio) || '—'}</strong>${badgeComp}</td>
+        <td>${escHtml(v.fecha_formato) || '—'}</td>
+        <td>${escHtml(v.cliente) || '—'}</td>
+        <td>${escHtml(v.CodVendedor) || '—'}</td>
         <td style="text-align:right">${formatCLP(montoMostrar)}</td>
+        <td style="text-align:right">${formatCLP(totLineaReal)}</td>
         <td style="text-align:right">${pctDesc}</td>
         <td style="text-align:center">
           <button class="btn-detalle" data-folio="${v.Folio}" title="Ver detalle">
@@ -355,14 +380,14 @@
       const total = data.detalle.reduce((s,l)=>s+(Number(l.valor_historico_linea)||0),0);
       tbody.innerHTML = data.detalle.map(l=>`
         <tr>
-          <td><code>${l.CodProd||'—'}</code></td>
-          <td>${l.DesProd||'—'}</td>
-          <td style="text-align:center">${l.CantFacturada??'—'}</td>
+          <td><code>${escHtml(l.CodProd) || '—'}</code></td>
+          <td>${escHtml(l.DesProd) || '—'}</td>
+          <td style="text-align:center">${l.CantFacturada ?? '—'}</td>
           <td style="text-align:right">${formatCLP(l.precio_unitario_historico)}</td>
           <td style="text-align:right"><strong>${formatCLP(l.valor_historico_linea)}</strong></td>
         </tr>`).join('');
       setText('modalTotalValor', formatCLP(total));
-    } catch(err) { console.error('[abrirDetalle]',err); tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-danger)">⚠️ Error</td></tr>'; }
+} catch(err) { console.error('[abrirDetalle]',err); tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-danger)">&#x26A0;&#xFE0F; Error</td></tr>'; }
   }
 
   function cerrarModal() {
@@ -376,29 +401,32 @@
   // ── CARTERA DE CLIENTES ───────────────────────────────────────────────────
   async function cargarCartera() {
     try {
-      const res  = await fetch(API_CART, { headers:{ Authorization:`Bearer ${token()}` } });
+      const res  = await fetch(`${API_CART}?${new URLSearchParams(getParams())}`, { headers:{ Authorization:`Bearer ${token()}` } });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Error cartera');
 
       carteraData.activos     = data.activos     || [];
       carteraData.inactivos   = data.inactivos   || [];
       carteraData.recuperados = data.recuperados || [];
+      carteraData.sinCompras  = data.sinCompras  || [];
 
-      carteraRendered = { activo: false, inactivo: false, recuperado: false };
+      carteraRendered = { activo: false, inactivo: false, recuperado: false, sincompras: false };
 
-      setText('countActivo',     String(carteraData.activos.length));
-      setText('countInactivo',   String(carteraData.inactivos.length));
-      setText('countRecuperado', String(carteraData.recuperados.length));
+      setText('countActivo',      String(carteraData.activos.length));
+      setText('countInactivo',    String(carteraData.inactivos.length));
+      setText('countRecuperado',  String(carteraData.recuperados.length));
+      setText('countSincompras',  String(carteraData.sinCompras.length));
 
-      ['activo', 'inactivo', 'recuperado'].forEach(tipo => {
+      ['activo', 'inactivo', 'recuperado', 'sincompras'].forEach(tipo => {
         const lista = document.getElementById(`lista${capitalize(tipo)}`);
         if (lista && !lista.hidden) renderCartaTipo(tipo);
       });
     } catch (err) {
       console.error('[cargarCartera]', err);
-      setText('countActivo',     '—');
-      setText('countInactivo',   '—');
-      setText('countRecuperado', '—');
+      setText('countActivo',      '—');
+      setText('countInactivo',    '—');
+      setText('countRecuperado',  '—');
+      setText('countSincompras',  '—');
     }
   }
 
@@ -413,9 +441,10 @@
           (c.FonAux2 || '').toLowerCase().includes(q))
       : lista;
 
-    if (tipo === 'activo')          renderTablaCartera('tbodyActivo',     filtrarLista(carteraData.activos),     'Sin clientes activos');
-    else if (tipo === 'inactivo')   renderTablaCartera('tbodyInactivo',   filtrarLista(carteraData.inactivos),   'Sin clientes inactivos');
-    else if (tipo === 'recuperado') renderTablaCartera('tbodyRecuperado', filtrarLista(carteraData.recuperados), 'Sin clientes recuperados');
+    if (tipo === 'activo')          renderTablaCartera('tbodyActivo',      filtrarLista(carteraData.activos),     'Sin clientes activos');
+    else if (tipo === 'inactivo')   renderTablaCartera('tbodyInactivo',    filtrarLista(carteraData.inactivos),   'Sin clientes inactivos');
+    else if (tipo === 'recuperado') renderTablaCarteraRecuperado('tbodyRecuperado', filtrarLista(carteraData.recuperados), 'Sin clientes recuperados');
+    else if (tipo === 'sincompras') renderTablaCartera('tbodySincompras',  filtrarLista(carteraData.sinCompras),  'Sin clientes en esta categoría');
     carteraRendered[tipo] = true;
   }
 
@@ -425,20 +454,48 @@
     if (!lista.length) { tbody.innerHTML = `<tr class="tabla-empty"><td colspan="5">${mensajeVacio}</td></tr>`; return; }
     tbody.innerHTML = lista.map(c => {
       const emailHtml = c.EMail
-        ? `<a href="mailto:${c.EMail}" style="color:var(--color-primary);text-decoration:none" title="${c.EMail}">${c.EMail}</a>`
+        ? `<a href="mailto:${escHtml(c.EMail)}" style="color:var(--color-primary);text-decoration:none" title="${escHtml(c.EMail)}">${escHtml(c.EMail)}</a>`
         : '—';
       const tel1Html = c.FONAUX1
-        ? `<a href="tel:${c.FONAUX1}" style="color:var(--color-primary);text-decoration:none">${c.FONAUX1}</a>`
+        ? `<a href="tel:${escHtml(c.FONAUX1)}" style="color:var(--color-primary);text-decoration:none">${escHtml(c.FONAUX1)}</a>`
         : '—';
       const tel2Html = c.FonAux2
-        ? `<a href="tel:${c.FonAux2}" style="color:var(--color-primary);text-decoration:none">${c.FonAux2}</a>`
+        ? `<a href="tel:${escHtml(c.FonAux2)}" style="color:var(--color-primary);text-decoration:none">${escHtml(c.FonAux2)}</a>`
         : '—';
       return `<tr>
-          <td><code>${c.CodAux||'—'}</code></td>
-          <td>${c.NomAux||'—'}</td>
+          <td><code>${escHtml(c.CodAux) || '—'}</code></td>
+          <td>${escHtml(c.NomAux) || '—'}</td>
           <td>${tel1Html}</td>
           <td>${tel2Html}</td>
           <td>${emailHtml}</td>
+        </tr>`;
+    }).join('');
+  }
+
+  function renderTablaCarteraRecuperado(tbodyId, lista, mensajeVacio) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+    if (!lista.length) { tbody.innerHTML = `<tr class="tabla-empty"><td colspan="8">${mensajeVacio}</td></tr>`; return; }
+    const fmtFecha = (f) => f ? new Date(f).toLocaleDateString('es-CL') : '—';
+    tbody.innerHTML = lista.map(c => {
+      const emailHtml = c.EMail
+        ? `<a href="mailto:${escHtml(c.EMail)}" style="color:var(--color-primary);text-decoration:none" title="${escHtml(c.EMail)}">${escHtml(c.EMail)}</a>`
+        : '—';
+      const tel1Html = c.FONAUX1
+        ? `<a href="tel:${escHtml(c.FONAUX1)}" style="color:var(--color-primary);text-decoration:none">${escHtml(c.FONAUX1)}</a>`
+        : '—';
+      const tel2Html = c.FonAux2
+        ? `<a href="tel:${escHtml(c.FonAux2)}" style="color:var(--color-primary);text-decoration:none">${escHtml(c.FonAux2)}</a>`
+        : '—';
+      return `<tr>
+          <td><code>${escHtml(c.CodAux) || '—'}</code></td>
+          <td>${escHtml(c.NomAux) || '—'}</td>
+          <td>${tel1Html}</td>
+          <td>${tel2Html}</td>
+          <td>${emailHtml}</td>
+          <td>${fmtFecha(c.PenultimaFactura)}</td>
+          <td>${fmtFecha(c.UltimaFactura)}</td>
+          <td style="text-align:right"><strong>${c.DiasRecuperado != null ? c.DiasRecuperado + ' días' : '—'}</strong></td>
         </tr>`;
     }).join('');
   }
@@ -469,6 +526,8 @@
     if (bInactivo) bInactivo.addEventListener('input', e => renderCartaTipo('inactivo', e.target.value));
     const bRecup = document.getElementById('busquedaRecuperado');
     if (bRecup) bRecup.addEventListener('input', e => renderCartaTipo('recuperado', e.target.value));
+    const bSinCompras = document.getElementById('busquedaSincompras');
+    if (bSinCompras) bSinCompras.addEventListener('input', e => renderCartaTipo('sincompras', e.target.value));
   }
 
   function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
@@ -484,7 +543,7 @@
       if (!sel) return;
       sel.innerHTML = '<option value="">— Selecciona vendedor —</option>' +
         data.vendedores.map(v =>
-          `<option value="${v.cod}">${v.cod} — ${v.nombre||'Sin nombre'}</option>`
+          `<option value="${escHtml(v.cod)}">${escHtml(v.cod)} — ${escHtml(v.nombre) || 'Sin nombre'}</option>`
         ).join('');
     } catch(err) { console.error('[cargarListaVendedores]', err); }
   }
@@ -537,23 +596,23 @@
       }
       sel.innerHTML = '<option value="">— Selecciona un folio —</option>' +
         data.folios.map(f =>
-          `<option value="${f.Folio}">${f.Folio} — ${f.cliente||'?'} — ${formatCLP(f.monto)}</option>`
+          `<option value="${escHtml(f.Folio)}">${escHtml(f.Folio)} — ${escHtml(f.cliente) || '?'} — ${formatCLP(f.monto)}</option>`
         ).join('');
     } catch(err) { console.error('[cargarFoliosParaCompartir]',err); }
   }
 
   function opcionesVendedores(seleccionado) {
     return todosVendedores.map(v =>
-      `<option value="${v.cod}" ${v.cod === seleccionado ? 'selected' : ''}>${v.cod} — ${v.nombre||'Sin nombre'}</option>`
+      `<option value="${escHtml(v.cod)}" ${v.cod === seleccionado ? 'selected' : ''}>${escHtml(v.cod)} — ${escHtml(v.nombre) || 'Sin nombre'}</option>`
     ).join('');
   }
 
   function filaAsignadoVista(c) {
     return `
-      <td><strong>${c.folio}</strong></td>
+      <td><strong>${escHtml(c.folio)}</strong></td>
       <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—'}</td>
-      <td>${c.cliente||'—'}</td>
-      <td>${c.nombre_vendedor_compartido||c.cod_vendedor_compartido||'—'}</td>
+      <td>${escHtml(c.cliente) || '—'}</td>
+      <td>${escHtml(c.nombre_vendedor_compartido || c.cod_vendedor_compartido) || '—'}</td>
       <td style="text-align:right">${c.porcentaje}%</td>
       <td style="text-align:right">${formatCLP(c.monto_asignado)}</td>
       <td>
@@ -566,9 +625,9 @@
 
   function filaAsignadoEdicion(c) {
     return `
-      <td><strong>${c.folio}</strong></td>
+      <td><strong>${escHtml(c.folio)}</strong></td>
       <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—'}</td>
-      <td>${c.cliente||'—'}</td>
+      <td>${escHtml(c.cliente) || '—'}</td>
       <td>
         <select class="crud-input-select" id="editVend_${c.id}">
           <option value="">— Selecciona —</option>
@@ -668,14 +727,200 @@
       }
       tbody.innerHTML = data.compartidos.map(c => `
         <tr>
-          <td><strong>${c.folio}</strong></td>
+          <td><strong>${escHtml(c.folio)}</strong></td>
           <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—'}</td>
-          <td>${c.cliente||'—'}</td>
-          <td>${c.coordinador||c.cod_vendedor_principal||'—'}</td>
+          <td>${escHtml(c.cliente) || '—'}</td>
+          <td>${escHtml(c.coordinador || c.cod_vendedor_principal) || '—'}</td>
           <td style="text-align:right">${c.porcentaje}%</td>
           <td style="text-align:right">${formatCLP(c.monto_asignado)}</td>
         </tr>`).join('');
     } catch(err) { console.error('[cargarFoliosCompartidos]',err); }
+  }
+
+  // ── Gráfico Distribución por Categoría ──────────────────────────────────
+  const COLORES_TORTA = ['#00E2A7','#4ECDC4','#45B7D1','#96CEB4','#F5A623','#DDA0DD','#F06543','#00B4D8'];
+
+  function renderGraficoClientesDistribucion(datos) {
+    const canvas = document.getElementById('graficoClientesDistribucion');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (graficoClientesDistribucion) graficoClientesDistribucion.destroy();
+
+    if (!datos || !datos.length) {
+      graficoClientesDistribucion = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Sin datos'],
+          datasets: [{ data: [1], backgroundColor: ['#E8EAF0'], borderWidth: 0 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          cutout: '60%'
+        }
+      });
+      return;
+    }
+
+    graficoClientesDistribucion = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: datos.map(d => d.label),
+        datasets: [{
+          data: datos.map(d => d.valor),
+          backgroundColor: datos.map(d => d.color),
+          borderWidth: datos.map(d => d.valor > 0 ? 3 : 1),
+          borderColor: datos.map(d => d.valor > 0 ? '#222' : '#fff')
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          datalabels: {
+            display: (ctx2) => {
+              const total = ctx2.dataset.data.reduce((s, v) => s + (v || 0), 0);
+              const pct = total > 0 ? (ctx2.dataset.data[ctx2.dataIndex] || 0) / total * 100 : 0;
+              return pct >= 3;
+            },
+            color: '#fff',
+            font: { family: 'Montserrat', size: 11, weight: '700' },
+            formatter: (value, ctx2) => {
+              const total = ctx2.dataset.data.reduce((s, v) => s + (v || 0), 0);
+              if (!total) return '';
+              return ((value / total) * 100).toFixed(1) + '%';
+            }
+          },
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { family: 'Montserrat', size: 12 },
+              usePointStyle: true,
+              pointStyle: 'circle',
+              boxWidth: 10,
+              padding: 14,
+              generateLabels: (chart) => {
+                const dataset = chart.data.datasets[0];
+                return chart.data.labels.map((label, i) => {
+                  const valor = dataset.data[i] || 0;
+                  return {
+                    text: label,
+                    fillStyle: dataset.backgroundColor[i],
+                    strokeStyle: dataset.backgroundColor[i],
+                    hidden: false,
+                    index: i,
+                    fontColor: valor === 0 ? '#B0B8C1' : undefined
+                  };
+                });
+              }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx2) => {
+                const total = ctx2.dataset.data.reduce((sum, v) => sum + (v || 0), 0);
+                const pct = total > 0 ? ((ctx2.parsed / total) * 100).toFixed(1) : '0.0';
+                return ` ${ctx2.label}: ${ctx2.parsed.toLocaleString('es-CL')}  (${pct}%)`;
+              }
+            }
+          }
+        },
+        cutout: '55%'
+      }
+    });
+  }
+
+  async function cargarGraficoClientes() {
+    try {
+      const res  = await fetch(`${API}/categorias-vendedor?${new URLSearchParams(getParams())}`, { headers:{ Authorization:`Bearer ${token()}` } });
+      const data = await res.json();
+
+      const tabsEl = document.getElementById('tortaVendedorTabs');
+
+      if (!data.ok || !data.vendedores.length) {
+        if (tabsEl) tabsEl.style.display = 'none';
+        renderGraficoClientesDistribucion([]);
+        return;
+      }
+
+      const vendedores = data.vendedores;
+
+      // Lista maestra completa desde MySQL (todas las categorías, con o sin ventas)
+      const todasLasCategorias = data.todasLasCategorias || [];
+      const aggMap = {};
+      for (const v of vendedores) {
+        for (const c of v.categorias) {
+          aggMap[c.categoria] = (aggMap[c.categoria] || 0) + c.total;
+        }
+      }
+      const maestro = [
+        ...Object.entries(aggMap).sort((a, b) => b[1] - a[1]).map(([label]) => label),
+        ...todasLasCategorias.filter(cat => !aggMap[cat])
+      ].map((label, i) => ({ label, color: COLORES_TORTA[i % COLORES_TORTA.length] }));
+
+      function padear(categorias) {
+        const mapa = Object.fromEntries(categorias.map(c => [c.categoria, c.total]));
+        return maestro.map(m => ({ label: m.label, valor: mapa[m.label] || 0, color: m.color }));
+      }
+
+      const datosTotal = maestro.map(m => ({ label: m.label, valor: aggMap[m.label] || 0, color: m.color }));
+
+      if (vendedores.length === 1) {
+        if (tabsEl) tabsEl.style.display = 'none';
+        renderGraficoClientesDistribucion(padear(vendedores[0].categorias));
+      } else {
+        if (tabsEl) {
+          tabsEl.style.display = 'flex';
+          const tabTodos = `<button class="torta-tab torta-tab--activo" data-idx="-1">Todos</button>`;
+          const tabsVendedores = vendedores.map((v, i) =>
+            `<button class="torta-tab" data-idx="${i}">${v.codVendedor}</button>`
+          ).join('');
+          tabsEl.innerHTML = tabTodos + tabsVendedores;
+
+          tabsEl.querySelectorAll('.torta-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+              tabsEl.querySelectorAll('.torta-tab').forEach(b => b.classList.remove('torta-tab--activo'));
+              btn.classList.add('torta-tab--activo');
+              const idx = Number(btn.dataset.idx);
+              if (idx === -1) {
+                renderGraficoClientesDistribucion(datosTotal);
+              } else {
+                renderGraficoClientesDistribucion(padear(vendedores[idx].categorias));
+              }
+            });
+          });
+        }
+        renderGraficoClientesDistribucion(datosTotal);
+      }
+    } catch (err) { console.error('[cargarGraficoClientes]', err); }
+  }
+
+  // ── Clientes por vendedor ─────────────────────────────────────────────────
+  async function cargarClientesResumen() {
+    try {
+      const res  = await fetch(`${API}/clientes-resumen?${new URLSearchParams(getParams())}`, { headers:{ Authorization:`Bearer ${token()}` } });
+      const data = await res.json();
+      const tbody = document.getElementById('tbodyClientesResumen');
+      if (!tbody) return;
+      if (!data.ok || !data.clientes.length) {
+        tbody.innerHTML = '<tr class="tabla-empty"><td colspan="4">Sin datos</td></tr>'; return;
+      }
+      tbody.innerHTML = data.clientes.map(c => {
+        return `<tr>
+          <td><strong>${escHtml(c.codVendedor)}</strong></td>
+          <td style="text-align:right">${c.totalClientesHist.toLocaleString('es-CL')}</td>
+          <td style="text-align:right">${c.totalClientesPeriodo.toLocaleString('es-CL')}</td>
+        </tr>`;
+      }).join('');
+      const tfoot = document.getElementById('tfootClientesResumen');
+      if (tfoot) {
+        const totalPeriodo = data.clientes.reduce((s, c) => s + (c.totalClientesPeriodo || 0), 0);
+        tfoot.innerHTML = `<tr>
+          <td><strong>Total</strong></td>
+          <td></td>
+          <td style="text-align:right"><strong>${totalPeriodo.toLocaleString('es-CL')}</strong></td>
+        </tr>`;
+      }
+    } catch (err) { console.error('[cargarClientesResumen]', err); }
   }
 
   // ── Cargar todo ───────────────────────────────────────────────────────────
@@ -688,6 +933,8 @@
         cargarCartera(),
         cargarVendedores(),
         cargarVentasMes(),
+        cargarGraficoClientes(),
+        cargarClientesResumen(),
         esCoordinador(usuario)
           ? Promise.all([ cargarFoliosParaCompartir(), cargarFoliosAsignados() ])
           : cargarFoliosCompartidos()
@@ -749,5 +996,5 @@
   if (document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
-})();
+})(); 
 
