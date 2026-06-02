@@ -22,8 +22,7 @@ const { testConnection } = require('./config/db');
 
 // ── Módulos de negocio ────────────────────────────────────────────────────────
 const authModule           = require('./modules/auth');
-const ventasModule         = require('./modules/ventas');
-const dashboardModule      = require('./modules/dashboard');
+const ventasModule         = require('./modules/ventas');   // incluye /dashboard como submódulo
 const adminModule          = require('./modules/admin');
 const notificacionesModule = require('./modules/notificaciones');
 const carteraModule        = require('./modules/cartera');
@@ -112,8 +111,7 @@ app.use('/api/auth/login',    loginLimiter);
 app.use('/api/auth/refresh',  loginLimiter);
 
 app.use('/api/auth',           authModule);
-app.use('/api/ventas',         ventasModule);
-app.use('/api/dashboard',      dashboardModule);
+app.use('/api/ventas',         ventasModule);         // /api/ventas/* + /api/ventas/dashboard/*
 app.use('/api/admin',          adminModule);
 app.use('/api/notificaciones', notificacionesModule);
 app.use('/api/cartera',        carteraModule);
