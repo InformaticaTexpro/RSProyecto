@@ -2,56 +2,56 @@
 
 ## Arquitectura Modular
 
-El proyecto está organizado en tres capas bien definidas:
-
 ```
 src/
-├── server.js                    ← Punto de entrada. Registra módulos y middleware global.
+├── server.js                         ← Punto de entrada. Solo registra módulos y middleware global.
 │
-├── core/                        ← Infraestructura técnica (no es negocio)
-│   ├── config/                  ← Configuración de BD, env, etc.
-│   ├── database/                ← Conexiones a MySQL y Softland
-│   ├── middlewares/             ← requireAuth, rateLimiter, etc.
-│   ├── utils/                   ← Helpers reutilizables (stringHelpers, mailer, otpStore...)
-│   └── tools/                   ← Herramientas internas
+├── config/                           ← Configuración de conexiones (db, db.softland)
+├── middlewares/                      ← requireAuth, requireAdmin, rateLimiter
+├── models/                           ← Modelos de datos reutilizables entre módulos
+├── utils/                            ← Helpers globales (stringHelpers, mailer, otpStore...)
 │
-├── shared/                      ← Recursos compartidos entre módulos
-│   └── models/                  ← Modelos de datos reutilizables entre módulos
+├── routes/
+│   └── dashboard.js                  ← Pendiente migrar en Fase 3 (archivo muy grande)
 │
-└── modules/                     ← Módulos de negocio (1 carpeta = 1 dominio)
-    ├── auth/                    ← Login + recuperación de contraseña
-    │   └── index.js
+└── modules/                          ← Módulos de negocio (1 carpeta = 1 dominio)
+    ├── auth/
+    │   ├── index.js                  ← Exporta el router
+    │   └── auth.routes.js            ← Login, logout, refresh, recuperar contraseña
     ├── ventas/
-    │   └── index.js
+    │   ├── index.js
+    │   └── ventas.routes.js
     ├── dashboard/
-    │   └── index.js
+    │   └── index.js                  ← Apunta a routes/dashboard.js (pendiente Fase 3)
     ├── admin/
-    │   └── index.js
+    │   ├── index.js
+    │   └── admin.routes.js
     ├── notificaciones/
-    │   └── index.js
+    │   ├── index.js
+    │   └── notificaciones.routes.js
     ├── cartera/
-    │   └── index.js
+    │   ├── index.js
+    │   └── cartera.routes.js
     └── alertas/
-        └── index.js
+        ├── index.js
+        └── alertas.routes.js
 ```
 
 ## Principios
 
-- **`core/`** nunca importa de `modules/`. Solo al revés.
-- **`modules/<módulo>/index.js`** es el único punto de entrada que `server.js` conoce.
-- Agregar un nuevo módulo = crear `modules/<nuevo>/index.js` + una línea en `server.js`.
-- Los archivos en `src/routes/` se mantienen como implementación interna de cada módulo
-  durante la transición. En la siguiente fase, la lógica migrará completamente a
-  `modules/<módulo>/` con su propio `routes.js`, `controller.js` y `model.js`.
+- `server.js` solo conoce `modules/<módulo>/index.js`. Nunca importa de `routes/` directamente.
+- Cada `index.js` es el único punto de entrada público del módulo.
+- Los imports dentro de cada módulo apuntan a `../../config/`, `../../middlewares/`, etc.
+- `routes/dashboard.js` se mantiene temporalmente hasta la Fase 3.
 
-## Próximos pasos (Fase 2)
+## Estado de Migración
 
-Cuando un módulo crezca o necesite ser refactorizado internamente:
-
-```
-modules/ventas/
-├── index.js          ← Exporta el router
-├── ventas.routes.js  ← Define endpoints
-├── ventas.controller.js ← Lógica de negocio
-└── ventas.model.js   ← Queries SQL
-```
+| Módulo | Estado |
+|---|---|
+| auth (login + recuperar) | ✅ Migrado a modules/auth/auth.routes.js |
+| ventas | ✅ Migrado a modules/ventas/ventas.routes.js |
+| admin | ✅ Migrado a modules/admin/admin.routes.js |
+| notificaciones | ✅ Migrado a modules/notificaciones/notificaciones.routes.js |
+| cartera | ✅ Migrado a modules/cartera/cartera.routes.js |
+| alertas | ✅ Migrado a modules/alertas/alertas.routes.js |
+| dashboard | ⏳ Pendiente Fase 3 (archivo 48kb, requiere división en sub-rutas) |

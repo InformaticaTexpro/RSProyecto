@@ -2,11 +2,10 @@
 /**
  * modules/dashboard/index.js
  *
- * Punto de entrada del módulo de dashboard.
- * Redirige al router existente en src/routes/dashboard.js
+ * El módulo de dashboard mantiene su router en dashboard.routes.js.
+ * Por el tamaño del archivo (48kb), se referencia directamente
+ * desde src/routes/dashboard.js hasta que se divida en sub-módulos.
  *
- * Endpoints expuestos bajo /api/dashboard:
- *   Ver src/routes/dashboard.js para el listado completo.
+ * TODO: dividir en dashboard.ventas.routes.js, dashboard.produccion.routes.js, etc.
  */
-
 module.exports = require('../../routes/dashboard');

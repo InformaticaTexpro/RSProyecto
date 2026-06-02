@@ -5,7 +5,6 @@
  *
  * Punto de entrada principal.
  * Cada módulo de negocio se registra desde src/modules/<módulo>/index.js
- * La infraestructura técnica vive en src/core/
  */
 
 const path      = require('path');
@@ -19,16 +18,16 @@ if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
   process.exit(1);
 }
 
-const { testConnection } = require('./core/config/db');
+const { testConnection } = require('./config/db');
 
-// ── Módulos de negocio ────────────────────────────────────────────
-const authModule          = require('./modules/auth');
-const ventasModule        = require('./modules/ventas');
-const dashboardModule     = require('./modules/dashboard');
-const adminModule         = require('./modules/admin');
+// ── Módulos de negocio ────────────────────────────────────────────────────────
+const authModule           = require('./modules/auth');
+const ventasModule         = require('./modules/ventas');
+const dashboardModule      = require('./modules/dashboard');
+const adminModule          = require('./modules/admin');
 const notificacionesModule = require('./modules/notificaciones');
-const carteraModule       = require('./modules/cartera');
-const alertasModule       = require('./modules/alertas');
+const carteraModule        = require('./modules/cartera');
+const alertasModule        = require('./modules/alertas');
 
 const app  = express();
 const PORT = Number(process.env.PORT || 3000);
@@ -107,20 +106,20 @@ app.get('/api/health', async (_req, res) => {
   }
 });
 
-// ── Registro de rutas ─────────────────────────────────────────────
+// ── Registro de rutas ─────────────────────────────────────────────────────────
 app.use('/api', apiLimiter);
-app.use('/api/auth/login',   loginLimiter);
-app.use('/api/auth/refresh', loginLimiter);
+app.use('/api/auth/login',    loginLimiter);
+app.use('/api/auth/refresh',  loginLimiter);
 
-app.use('/api/auth',          authModule);
-app.use('/api/ventas',        ventasModule);
-app.use('/api/dashboard',     dashboardModule);
-app.use('/api/admin',         adminModule);
+app.use('/api/auth',           authModule);
+app.use('/api/ventas',         ventasModule);
+app.use('/api/dashboard',      dashboardModule);
+app.use('/api/admin',          adminModule);
 app.use('/api/notificaciones', notificacionesModule);
-app.use('/api/cartera',       carteraModule);
-app.use('/api/alertas',       alertasModule);
+app.use('/api/cartera',        carteraModule);
+app.use('/api/alertas',        alertasModule);
 
-// ── Manejo de errores ─────────────────────────────────────────────
+// ── Manejo de errores ─────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ ok: false, error: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });
 });
