@@ -7,7 +7,7 @@
  * Acceso: usuario.area + usuario.is_admin.
  */
 (function () {
-  const AREA_ADMIN = ['admin', 'gerencia'];
+  const AREA_ADMIN = ['admin'];
   const NO_ACCESS_URL = '/src/modulo/varios/sin-acceso/index.html';
 
   const NAV_MODULOS = [
@@ -20,6 +20,15 @@
         { nombre: 'Dashboard', icon: '🏠', url: '/src/modulo/ventas/dashboard/index.html' },
         { nombre: 'Ventas Asignadas', icon: '🤝', url: '/src/modulo/ventas/ventas/index.html' },
         { nombre: 'Historial Cliente', icon: '📋', url: '/src/modulo/ventas/historial-cliente/index.html' },
+      ],
+    },
+    {
+      nombre: 'Gerencia',
+      icon: '📈',
+      areas: ['gerencia', 'admin'],
+      mainUrl: '/src/modulo/gerencia/index.html',
+      items: [
+        { nombre: 'Panel Comercial', icon: '📈', url: '/src/modulo/gerencia/index.html' },
       ],
     },
     {
@@ -103,7 +112,7 @@
 
   function esAdmin(usuario) {
     const area = normalizarArea(usuario?.area);
-    return Boolean(usuario?.is_admin) || AREA_ADMIN.includes(area);
+    return usuario?.is_admin === true || usuario?.is_admin === 1 || usuario?.is_admin === '1' || AREA_ADMIN.includes(area);
   }
 
   function puedeAccederModulo(modulo, usuario) {
