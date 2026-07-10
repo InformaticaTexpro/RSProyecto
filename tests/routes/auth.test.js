@@ -20,6 +20,7 @@ jest.mock('../../src/config/db', () => ({
 }));
 
 jest.mock('../../src/utils/pbkdf2Django', () => ({
+  parseDjangoHash:      jest.requireActual('../../src/utils/pbkdf2Django').parseDjangoHash,
   verifyPasswordDjango: jest.fn(),
   hashPasswordDjango:   jest.fn(() => 'fakehash'),
 }));
@@ -47,19 +48,26 @@ beforeEach(() => jest.clearAllMocks());
 describe('POST /api/auth/login', () => {
   const fakeUser = {
     id: 1, email: 'ana@texpro.cl', nombre: 'Ana',
-    password: 'pbkdf2_sha256$fakehash', area: 'Ventas',
+    password: 'pbkdf2_sha256$600000$saltABC$AAABBBCCC=', area: 'Ventas',
     is_admin: 0, is_active: 1,
   };
+  const fakeMenus = [
+    { id: 1, codigo: 'dashboard', nombre: 'Dashboard', url: '/src/modulo/ventas/dashboard/index.html', icono: '🏠', grupo: 'Ventas', orden: 1 },
+    { id: 2, codigo: 'ventas-asignadas', nombre: 'Ventas Asignadas', url: '/src/modulo/ventas/ventas/index.html', icono: '🤝', grupo: 'Ventas', orden: 2 },
+    { id: 3, codigo: 'historial-cliente', nombre: 'Historial Cliente', url: '/src/modulo/ventas/historial-cliente/index.html', icono: '📋', grupo: 'Ventas', orden: 3 },
+  ];
 
   test('devuelve token con credenciales válidas', async () => {
     mockDbQuery
       .mockResolvedValueOnce([[fakeUser]])  // SELECT usuario
-      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]]); // SELECT vendedores
+      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]]) // SELECT vendedores
+      .mockResolvedValueOnce([fakeMenus]) // SELECT menus asignados
+      .mockResolvedValueOnce([fakeMenus]); // SELECT catálogo completo
     verifyPasswordDjango.mockReturnValueOnce(true);
 
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'ana@texpro.cl', password: 'correcta123' });
+      .send({ email: '  ANA@TEXPRO.CL ', password: 'correcta123' });
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
@@ -69,6 +77,42 @@ describe('POST /api/auth/login', () => {
     expect(decoded.id).toBe(1);
     expect(decoded.sub).toBe(1);
     expect(res.body.user.id).toBe(1);
+    expect(res.body.user.menus).toHaveLength(3);
+    expect(res.body.allMenus).toHaveLength(3);
+  });
+
+  test('acepta nombre de usuario además de email', async () => {
+    mockDbQuery
+      .mockResolvedValueOnce([[fakeUser]])
+      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]])
+      .mockResolvedValueOnce([fakeMenus])
+      .mockResolvedValueOnce([fakeMenus]);
+    verifyPasswordDjango.mockReturnValueOnce(true);
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ usuario: 'Ana', password: 'correcta123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.user.nombre).toBe('Ana');
+  });
+
+  test('acepta código de usuario además de email y nombre', async () => {
+    mockDbQuery
+      .mockResolvedValueOnce([[{ ...fakeUser, codigo: '629' }]])
+      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]])
+      .mockResolvedValueOnce([fakeMenus])
+      .mockResolvedValueOnce([fakeMenus]);
+    verifyPasswordDjango.mockReturnValueOnce(true);
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ usuario: ' 629 ', password: 'correcta123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.user.nombre).toBe('Ana');
   });
 
   test('devuelve 401 con contraseña incorrecta', async () => {
@@ -81,6 +125,30 @@ describe('POST /api/auth/login', () => {
 
     expect(res.status).toBe(401);
     expect(res.body.ok).toBe(false);
+  });
+
+  test('devuelve 401 si el hash de contraseña está vacío o null', async () => {
+    mockDbQuery.mockResolvedValueOnce([[{ ...fakeUser, password: null }]]);
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'ana@texpro.cl', password: 'correcta123' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.ok).toBe(false);
+    expect(verifyPasswordDjango).not.toHaveBeenCalled();
+  });
+
+  test('devuelve 401 si el hash tiene formato no soportado sin hacer crash', async () => {
+    mockDbQuery.mockResolvedValueOnce([[{ ...fakeUser, password: 'bcrypt$12$salt$hash' }]]);
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'ana@texpro.cl', password: 'correcta123' });
+
+    expect(res.status).toBe(401);
+    expect(res.body.ok).toBe(false);
+    expect(verifyPasswordDjango).not.toHaveBeenCalled();
   });
 
   test('devuelve 401 si el usuario no existe', async () => {
@@ -97,6 +165,8 @@ describe('POST /api/auth/login', () => {
       .post('/api/auth/login')
       .send({ email: 'ana@texpro.cl', password: 'correcta123' });
     expect(res.status).toBe(401);
+    expect(res.body.ok).toBe(false);
+    expect(verifyPasswordDjango).not.toHaveBeenCalled();
   });
 
   test('devuelve 400 si faltan email o password', async () => {
@@ -112,7 +182,9 @@ describe('GET /api/auth/me', () => {
   test('devuelve perfil con token válido', async () => {
     mockDbQuery
       .mockResolvedValueOnce([[{ id: 1, email: 'ana@texpro.cl', nombre: 'Ana', is_active: 1, is_admin: 0 }]])
-      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]]);
+      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]])
+      .mockResolvedValueOnce([[{ id: 1, codigo: 'dashboard', nombre: 'Dashboard', url: '/src/modulo/ventas/dashboard/index.html', icono: '🏠', grupo: 'Ventas', orden: 1 }]])
+      .mockResolvedValueOnce([[{ id: 2, codigo: 'ventas-asignadas', nombre: 'Ventas Asignadas', url: '/src/modulo/ventas/ventas/index.html', icono: '🤝', grupo: 'Ventas', orden: 2 }]]);
 
     const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET);
     const res = await request(app)
@@ -122,6 +194,8 @@ describe('GET /api/auth/me', () => {
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
     expect(res.body.user).toHaveProperty('email');
+    expect(res.body.user.menus).toHaveLength(1);
+    expect(res.body.allMenus).toHaveLength(1);
   });
 
   test('retorna 500 si la BD falla', async () => {

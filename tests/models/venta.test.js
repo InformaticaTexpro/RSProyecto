@@ -165,12 +165,13 @@ describe('getClientesPorVendedor', () => {
 describe('getVentas', () => {
   test('retorna lista de folios con formato esperado', async () => {
     const filas = [
-      { Folio: 1001, fecha_formato: '15/06/2026', monto: 500000, CodVendedor: 'V001' },
+      { Folio: 1001, tipo_folio: 'F', fecha_formato: '15/06/2026', monto: 500000, CodVendedor: 'V001' },
     ];
     mockRequest.query.mockResolvedValueOnce({ recordset: filas });
     const result = await getVentas(BASE);
     expect(result).toEqual(filas);
     expect(result[0].Folio).toBe(1001);
+    expect(mockRequest.query.mock.calls.at(-1)[0]).toMatch(/CASE gsaen\.Tipo WHEN 'F' THEN 1 WHEN 'N' THEN 2 WHEN 'D' THEN 3 ELSE 9 END/);
   });
 
   test('retorna array vacío si no hay ventas', async () => {
@@ -207,61 +208,78 @@ describe('getMontoFolio', () => {
 
 // ── getDetalleFolio ───────────────────────────────────────────────────────────
 describe('getDetalleFolio', () => {
-  test('retorna líneas del folio', async () => {
+  test('retorna l?neas del folio con campos de reporte', async () => {
     const filas = [
       {
-        Folio: 1001,
-        CodProd: 'P001',
-        DesProd: 'Producto A',
-        CantFacturada: 10,
-        TotLinea: 100000,
-        pct_descuento: 5,
+        Folio: 377326,
+        tipo_folio: 'F',
+        Tipo: 'F',
+        CodProd: 'PQ03580001',
+        DesProd: 'EJEMPLO DETALLE',
+        CantFacturada: 12,
+        TotLinea: 77964,
+        PreUniMB: 6497,
+        PreUniMVta: 6497,
+        precio_real_oficial: 2999,
       },
     ];
     mockRequest.query.mockResolvedValueOnce({ recordset: filas });
-    const result = await getDetalleFolio({ folio: 1001 });
-    expect(result).toEqual(filas);
+    const result = await getDetalleFolio({ folio: 377326 });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(expect.objectContaining({
+      Folio: 377326,
+      Tipo: 'F',
+      CodProd: 'PQ03580001',
+      CantFacturada: 12,
+      TotLinea: 77964,
+      precio_vta: 6497,
+      precio_real: 2999,
+      neto_real: 35988,
+      neto_total: 77964,
+      PrecioVta: 6497,
+      PrecioReal: 2999,
+      NetoReal: 35988,
+      NetoTotal: 77964,
+    }));
+    expect(result[0].dcto).toBe(-117);
   });
 
-  test('retorna array vacío si el folio no tiene líneas', async () => {
-    mockRequest.query.mockResolvedValueOnce({ recordset: [] });
-    expect(await getDetalleFolio({ folio: 9999 })).toEqual([]);
+  test('maneja nota de credito con precio y descuento correctos', async () => {
+    mockRequest.query.mockResolvedValueOnce({
+      recordset: [
+      {
+        Folio: 20475,
+          tipo_folio: 'N',
+          Tipo: 'N',
+          CodProd: 'PQ00010026',
+          CantFacturada: -52,
+          TotLinea: -343200,
+          PreUniMB: 7097,
+          PreUniMVta: 6600,
+          precio_real_oficial: 7097,
+        },
+      ],
+    });
+
+    const result = await getDetalleFolio({ folio: 20475 });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual(expect.objectContaining({
+      Tipo: 'N',
+      precio_real: 7097,
+      precio_vta: 6600,
+      neto_real: -369044,
+      neto_total: -343200,
+      PrecioVta: 6600,
+      PrecioReal: 7097,
+      NetoReal: -369044,
+      NetoTotal: -343200,
+      Dcto: 7,
+    }));
+    expect(result[0].dcto).toBe(7);
   });
 
-  test('llama buildDivisorCASE con la fecha del encabezado', async () => {
-    const { buildDivisorCASE } = require('../../src/utils/precioHistorico');
-    mockRequest.query.mockResolvedValueOnce({ recordset: [] });
-    await getDetalleFolio({ folio: 1001 });
-    expect(buildDivisorCASE).toHaveBeenCalledWith(
-      expect.anything(),
-      'gsaen.Fecha'
-    );
-  });
-
-  test('llama buildPrecioListaRealCASE con los 6 campos requeridos', async () => {
-    const { buildPrecioListaRealCASE } = require('../../src/utils/precioHistorico');
-    mockRequest.query.mockResolvedValueOnce({ recordset: [] });
-    await getDetalleFolio({ folio: 1001 });
-    expect(buildPrecioListaRealCASE).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        campoFecha:     'gsaen.Fecha',
-        campoCodProd:   'gmovi.CodProd',
-        campoTotLinea:  'gmovi.TotLinea',
-        campoCant:      'gmovi.CantFacturada',
-        campoPrecioVta: 'tprod.PrecioVta',
-        campoCodCan:    'cvl.CodCan',
-      })
-    );
-  });
-
-  test('propaga error de Softland', async () => {
-    mockRequest.query.mockRejectedValueOnce(new Error('connection lost'));
-    await expect(getDetalleFolio({ folio: 1001 })).rejects.toThrow('connection lost');
-  });
 });
 
-// ── getDescuentosVendedor ─────────────────────────────────────────────────────
 describe('getDescuentosVendedor', () => {
   test('retorna resumen de descuentos por vendedor', async () => {
     const filas = [

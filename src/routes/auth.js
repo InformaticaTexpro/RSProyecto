@@ -3,52 +3,183 @@
 /**
  * routes/auth.js
  *
- * Endpoints de autenticaciÃ³n:
- *   POST /api/auth/login        â€” Inicio de sesiÃ³n (email + password)
- *   GET  /api/auth/me           â€” Perfil del usuario autenticado
- *   POST /api/auth/logout       â€” Cierre de sesiÃ³n (client-side)
- *   POST /api/auth/refresh      â€” RenovaciÃ³n silenciosa de token JWT
+ * Endpoints de autenticación:
+ *   POST /api/auth/login        — Inicio de sesión (email + password)
+ *   GET  /api/auth/me           — Perfil del usuario autenticado
+ *   POST /api/auth/logout       — Cierre de sesión (client-side)
+ *   POST /api/auth/refresh      — Renovación silenciosa de token JWT
  */
 
 const express                  = require('express');
 const router                   = express.Router();
 const jwt                      = require('jsonwebtoken');
 const db                       = require('../config/db');
-const { verifyPasswordDjango } = require('../utils/pbkdf2Django');
+const { verifyPasswordDjango, parseDjangoHash } = require('../utils/pbkdf2Django');
 const { updateLastLogin }      = require('../models/usuario');
 const { requireAuth }          = require('../middlewares/requireAuth');
 
 const JWT_SECRET  = process.env.JWT_SECRET;
 const JWT_EXPIRES = process.env.JWT_EXPIRES_IN || '8h';
 
+function normalizarLogin(valor) {
+  return String(valor || '').trim().toLowerCase();
+}
+
+function logLoginFailure(motivo, detalle = {}) {
+  const logData = {
+    login: detalle.login || '',
+    userId: detalle.userId || null,
+    email: detalle.email || '',
+    passwordState: detalle.passwordState || '',
+  };
+  console.warn(`[POST /api/auth/login] ${motivo}`, logData);
+}
+
+function describirPasswordGuardado(encoded) {
+  if (!encoded || !String(encoded).trim()) return 'password_vacio';
+
+  try {
+    const parsed = parseDjangoHash(encoded);
+    if (parsed.algorithm !== 'pbkdf2_sha256') return 'formato_no_soportado';
+    return 'ok';
+  } catch {
+    return 'formato_no_soportado';
+  }
+}
+
+function normalizarVendedores(vendedores) {
+  return (vendedores || []).map(v => ({
+    ...v,
+    cod_vendedor: String(v?.cod_vendedor || '').trim(),
+    tipo: String(v?.tipo || '').trim().toUpperCase(),
+  }));
+}
+
+function normalizarMenus(menus) {
+  return (menus || [])
+    .map(menu => ({
+      id: Number(menu?.id) || menu?.id || null,
+      codigo: String(menu?.codigo || '').trim(),
+      nombre: String(menu?.nombre || '').trim(),
+      url: String(menu?.url || '').trim(),
+      icono: String(menu?.icono || '').trim(),
+      grupo: String(menu?.grupo || 'General').trim() || 'General',
+      orden: Number(menu?.orden ?? 0) || 0,
+    }))
+    .filter(menu => menu.id !== null && menu.url);
+}
+
+async function cargarMenusAsignados(usuarioId) {
+  const [rows] = await db.pool.query(
+    `SELECT DISTINCT
+        m.id,
+        m.codigo,
+        m.nombre,
+        m.url,
+        m.icono,
+        m.grupo,
+        m.orden
+     FROM usuario_menu um
+     INNER JOIN menu m ON m.id = um.menu_id
+     WHERE um.usuario_id = ?
+       AND um.activo = 1
+       AND m.activo = 1
+     ORDER BY m.orden ASC, m.grupo ASC, m.nombre ASC`,
+    [usuarioId]
+  );
+
+  return normalizarMenus(rows);
+}
+
+async function cargarCatalogoMenus() {
+  const [rows] = await db.pool.query(
+    `SELECT
+        m.id,
+        m.codigo,
+        m.nombre,
+        m.url,
+        m.icono,
+        m.grupo,
+        m.orden
+     FROM menu m
+     WHERE m.activo = 1
+     ORDER BY m.orden ASC, m.grupo ASC, m.nombre ASC`
+  );
+
+  return normalizarMenus(rows);
+}
+
+async function cargarMenusUsuario(usuarioId) {
+  const [menus, allMenus] = await Promise.all([
+    cargarMenusAsignados(usuarioId),
+    cargarCatalogoMenus(),
+  ]);
+
+  return { menus, allMenus };
+}
+
 // â”€â”€ POST /api/auth/login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 router.post('/login', async (req, res) => {
   // Acepta tanto { email } (frontend actual) como { usuario } (retrocompat)
   const { email, usuario, password } = req.body;
-  const emailFinal = (email || usuario || '').trim().toLowerCase();
+  const loginFinal = normalizarLogin(email || usuario);
 
-  if (!emailFinal || !password) {
-    return res.status(400).json({ ok: false, error: 'Email y contraseÃ±a requeridos' });
+  if (!loginFinal || !password) {
+    return res.status(400).json({ ok: false, error: 'Email y contraseña requeridos' });
   }
 
   try {
     const [rows] = await db.pool.query(
       `SELECT u.id, u.email, u.nombre, u.password, u.area, u.is_admin, u.is_active
        FROM usuario u
-       WHERE u.email = ?
+       WHERE LOWER(TRIM(COALESCE(u.email, ''))) = ?
+          OR LOWER(TRIM(COALESCE(u.nombre, ''))) = ?
+          OR LOWER(TRIM(COALESCE(u.codigo, ''))) = ?
        LIMIT 1`,
-      [emailFinal]
+      [loginFinal, loginFinal, loginFinal]
     );
 
     const user = rows[0];
     if (!user || !user.is_active) {
-      return res.status(401).json({ ok: false, error: 'Usuario o contraseÃ±a incorrectos' });
+      logLoginFailure(user ? 'usuario_inactivo' : 'usuario_no_encontrado', {
+        login: loginFinal,
+        userId: user?.id,
+        email: user?.email,
+      });
+      return res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos' });
+    }
+
+    const passwordState = describirPasswordGuardado(user.password);
+    if (passwordState === 'password_vacio') {
+      logLoginFailure('password_vacio', {
+        login: loginFinal,
+        userId: user.id,
+        email: user.email,
+        passwordState,
+      });
+      return res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos' });
+    }
+
+    if (passwordState === 'formato_no_soportado') {
+      logLoginFailure('formato_no_soportado', {
+        login: loginFinal,
+        userId: user.id,
+        email: user.email,
+        passwordState,
+      });
+      return res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos' });
     }
 
     // Las contraseÃ±as estÃ¡n en formato PBKDF2-SHA256 de Django (600.000 iter)
     const match = verifyPasswordDjango(password, user.password);
     if (!match) {
-      return res.status(401).json({ ok: false, error: 'Usuario o contraseÃ±a incorrectos' });
+      logLoginFailure('password_incorrecta', {
+        login: loginFinal,
+        userId: user.id,
+        email: user.email,
+        passwordState,
+      });
+      return res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos' });
     }
 
     // Registrar Ãºltimo acceso
@@ -59,6 +190,8 @@ router.post('/login', async (req, res) => {
       `SELECT cod_vendedor, tipo FROM usuario_vendedor WHERE usuario_id = ?`,
       [user.id]
     );
+    const vendedoresNormalizados = normalizarVendedores(vendedores);
+    const { menus, allMenus } = await cargarMenusUsuario(user.id);
 
     const payload = {
       id:        user.id,
@@ -67,7 +200,8 @@ router.post('/login', async (req, res) => {
       nombre:    user.nombre,
       area:      user.area,
       is_admin:  user.is_admin,
-      vendedores,
+      vendedores: vendedoresNormalizados,
+      menus,
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
@@ -76,6 +210,7 @@ router.post('/login', async (req, res) => {
       ok:    true,
       token,
       user:  { ...payload },
+      allMenus,
     });
 
   } catch (err) {
@@ -94,13 +229,15 @@ router.get('/me', requireAuth, async (req, res) => {
     );
     const user = rows[0];
     if (!user || !user.is_active) {
-      return res.status(401).json({ ok: false, error: 'SesiÃ³n no vÃ¡lida' });
+      return res.status(401).json({ ok: false, error: 'Sesión no valida' });
     }
     const [vendedores] = await db.pool.query(
       `SELECT cod_vendedor, tipo FROM usuario_vendedor WHERE usuario_id = ?`,
       [user.id]
     );
-    res.json({ ok: true, user: { ...user, vendedores } });
+    const vendedoresNormalizados = normalizarVendedores(vendedores);
+    const { menus, allMenus } = await cargarMenusUsuario(user.id);
+    res.json({ ok: true, user: { ...user, vendedores: vendedoresNormalizados, menus }, allMenus });
   } catch (err) {
     console.error('[GET /api/auth/me]', err.message);
     res.status(500).json({ ok: false, error: 'Error interno' });
@@ -110,7 +247,7 @@ router.get('/me', requireAuth, async (req, res) => {
 // â”€â”€ POST /api/auth/logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // JWT es stateless; logout se gestiona borrando el token en el cliente.
 router.post('/logout', requireAuth, (_req, res) => {
-  res.json({ ok: true, message: 'SesiÃ³n cerrada' });
+  res.json({ ok: true, message: 'Sesión cerrada' });
 });
 
 // â”€â”€ POST /api/auth/refresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -139,7 +276,7 @@ router.post('/refresh', async (req, res) => {
   const VENTANA_SEG = 24 * 60 * 60;
 
   if (ahora - expiracion > VENTANA_SEG) {
-    return res.status(401).json({ ok: false, error: 'Token demasiado antiguo para renovar. Inicia sesiÃ³n nuevamente.' });
+    return res.status(401).json({ ok: false, error: 'Token demasiado antiguo para renovar. Inicia sesión nuevamente.' });
   }
 
   try {
@@ -157,7 +294,8 @@ router.post('/refresh', async (req, res) => {
       `SELECT cod_vendedor, tipo FROM usuario_vendedor WHERE usuario_id = ?`,
       [user.id]
     );
-
+    const vendedoresNormalizados = normalizarVendedores(vendedores);
+    const { menus, allMenus } = await cargarMenusUsuario(user.id);
     const nuevoPayload = {
       id:        user.id,
       sub:       user.id,
@@ -165,15 +303,16 @@ router.post('/refresh', async (req, res) => {
       nombre:    user.nombre,
       area:      user.area,
       is_admin:  user.is_admin,
-      vendedores,
+      vendedores: vendedoresNormalizados,
+      menus,
     };
     const nuevoToken = jwt.sign(nuevoPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES });
 
-    res.json({ ok: true, token: nuevoToken });
+    res.json({ ok: true, token: nuevoToken, allMenus });
 
   } catch (err) {
     console.error('[POST /api/auth/refresh]', err.message);
-    res.status(500).json({ ok: false, error: 'Error al renovar sesiÃ³n' });
+    res.status(500).json({ ok: false, error: 'Error al renovar sesión' });
   }
 });
 

@@ -123,6 +123,11 @@ describe('GET /api/ventas — filtra por mes y año correctamente', () => {
     expect(res.status).toBe(400);
   });
 
+  test('año 2025 retorna 400 por mínimo operativo 2026', async () => {
+    const res = await request(app).get('/api/ventas?mes=1&anio=2025');
+    expect(res.status).toBe(400);
+  });
+
   test('sin parámetros usa defaults (mes y año actuales)', async () => {
     getVentas.mockResolvedValueOnce([]);
     const res = await request(app).get('/api/ventas');
@@ -169,21 +174,101 @@ describe('GET /api/ventas — valida códigos de vendedor', () => {
   });
 });
 
+describe('GET /api/ventas/detalle/:folio â€” entrega detalle normalizado', () => {
+  test('retorna detalle calculado por el modelo', async () => {
+    const detalle = [
+      {
+        Folio: 377326,
+        tipo_folio: 'F',
+        Tipo: 'F',
+        CodProd: 'PQ03580001',
+        CantFacturada: 12,
+        TotLinea: 77964,
+        precio_real: 2999,
+        precio_vta: 6497,
+        neto_real: 35988,
+        neto_total: 77964,
+        dcto: -117,
+      },
+    ];
+    const { getDetalleFolio } = require('../../src/models/venta');
+    getDetalleFolio.mockResolvedValueOnce(detalle);
+
+    const res = await request(app).get('/api/ventas/detalle/377326');
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.detalle).toEqual(detalle);
+    expect(res.body.tipo_folio).toBe('F');
+    expect(getDetalleFolio).toHaveBeenCalledWith({ folio: '377326' });
+  });
+});
+
 describe('GET /api/ventas clientes e historial', () => {
-  test('autocomplete no filtra clientes por vendedor', async () => {
-    await request(app).get('/api/ventas/clientes?q=ac');
+  test('autocomplete filtra clientes por cartera del usuario', async () => {
+    mockSoftlandRequest.query.mockResolvedValueOnce({
+      recordset: [{ CodAux: 'C001', NomAux: 'CLIENTE PROPIO' }],
+    });
+
+    const res = await request(app).get('/api/ventas/clientes?q=ac');
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.clientes).toHaveLength(1);
 
     const sqlQuery = mockSoftlandRequest.query.mock.calls.at(-1)[0];
-    expect(sqlQuery).not.toMatch(/CodVendedor\s+IN/i);
-    expect(sqlQuery).not.toMatch(/\bEXISTS\b/i);
+    expect(sqlQuery).toMatch(/cwtauxven/i);
+    expect(sqlQuery).toMatch(/VenCod\s+IN/i);
   });
 
-  test('historial de cliente no filtra documentos por vendedor', async () => {
-    await request(app)
-      .get('/api/ventas/historial-cliente?codAux=C001&desde=2026-01-01&hasta=2026-12-31');
+  test('cliente-info rechaza clientes fuera de cartera', async () => {
+    mockSoftlandRequest.query.mockResolvedValueOnce({ recordset: [] });
+
+    const res = await request(app).get('/api/ventas/cliente-info?codAux=CODELCO');
+
+    expect(res.status).toBe(404);
+    expect(res.body.ok).toBe(false);
 
     const sqlQuery = mockSoftlandRequest.query.mock.calls.at(-1)[0];
-    expect(sqlQuery).not.toMatch(/CodVendedor\s+IN/i);
-    expect(sqlQuery).not.toContain('@cod0');
+    expect(sqlQuery).toMatch(/cwtauxven/i);
+    expect(sqlQuery).toMatch(/VenCod\s+IN/i);
+  });
+
+  test('historial de cliente valida cliente por cartera actual', async () => {
+    mockSoftlandRequest.query.mockResolvedValueOnce({ recordset: [] });
+
+    const res = await request(app)
+      .get('/api/ventas/historial-cliente?codAux=C001&desde=2026-01-01&hasta=2026-12-31');
+
+    expect(res.status).toBe(200);
+
+    const sqlQuery = mockSoftlandRequest.query.mock.calls.at(-1)[0];
+    expect(sqlQuery).toMatch(/cwtauxven/i);
+    expect(sqlQuery).toMatch(/VenCod\s+IN/i);
+  });
+
+  test('historial sin vendedores asignados devuelve vacío', async () => {
+    const vendedoresOriginales = mockUsuario.vendedores;
+    mockUsuario.vendedores = [];
+
+    const res = await request(app)
+      .get('/api/ventas/historial-cliente?codAux=C001&desde=2026-01-01&hasta=2026-12-31');
+
+    mockUsuario.vendedores = vendedoresOriginales;
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true, historial: [] });
+    expect(mockSoftlandRequest.query).not.toHaveBeenCalled();
+  });
+
+  test('cliente ajeno no aparece aunque exista en ventas históricas', async () => {
+    mockSoftlandRequest.query.mockResolvedValueOnce({
+      recordset: [],
+    });
+
+    const res = await request(app).get('/api/ventas/clientes?q=antu');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true, clientes: [] });
   });
 });

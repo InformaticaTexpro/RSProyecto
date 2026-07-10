@@ -16,7 +16,6 @@
  *                    Recuperados); elimina lista-KPI redundante del HTML
  * 2026-06-11: fix — descuentos redondeados (sin decimales) en KPI global,
  *                    tabla vendedores y tabla ventas del mes
- * 2026-06-15: feat — cartera: agrega columna Historial con botón enlace a historial-cliente
  * 2026-06-15: fix — sidebar estandarizado: Ventas → Ventas Asignadas, Historial → Historial Cliente
  */
 
@@ -25,9 +24,6 @@
   const API        = '/api/dashboard';
   const API_CART   = '/api/cartera';
   const token      = () => localStorage.getItem('token');
-
-  // Ruta relativa al módulo historial-cliente
-  const HISTORIAL_URL = '../historial-cliente/index.html';
 
   let graficoEvolucion              = null;
   let graficoClientesDistribucion   = null;
@@ -150,7 +146,7 @@
       if (usuario.is_admin) return true;
       return m.area.includes(usuario.area);
     });
-    if (nav) nav.innerHTML = `<span class="nav-section-title">NAVEGACIÓN</span>
+    if (!window.__APP_SIDEBAR_LOADED__ && nav) nav.innerHTML = `<span class="nav-section-title">NAVEGACIÓN</span>
       <a class="nav-item active" href="#">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span class="nav-label">Dashboard</span>
@@ -187,7 +183,7 @@
     }
     const selAnio = document.getElementById('filtroAnio');
     if (selAnio) {
-      for (let y = hoy.getFullYear(); y >= 2022; y--) {
+      for (let y = hoy.getFullYear(); y >= 2026; y--) {
         const o = document.createElement('option');
         o.value = y; o.textContent = y;
         if (y === hoy.getFullYear()) o.selected = true;
@@ -352,7 +348,7 @@
       const badgeComp    = v.es_compartido
         ? `<span style="font-size:.7rem;background:#00E2A7;color:#000;border-radius:4px;padding:1px 5px;margin-left:4px">Compartido ${v.porcentaje_asignado?v.porcentaje_asignado+'%':''}</span>`
         : '';
-      return `<tr>
+      return `<tr data-folio="${v.Folio}">
         <td><strong>${escHtml(v.Folio) || '—'}</strong>${badgeComp}</td>
         <td>${escHtml(v.fecha_formato) || '—'}</td>
         <td>${escHtml(v.cliente) || '—'}</td>
@@ -381,26 +377,33 @@
     const venta = ventasMesData.find(v => String(v.Folio) === String(folio));
     setText('modalSubtitulo', venta ? `${venta.cliente||''} • ${venta.fecha_formato||''}` : '');
     setText('modalTotalValor', '—');
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem">Cargando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem">Cargando...</td></tr>';
     overlay.classList.add('modal-overlay--visible');
     overlay.setAttribute('aria-hidden','false');
     document.body.style.overflow = 'hidden';
     try {
       const res  = await fetch(`${API}/detalle/${folio}`, { headers:{ Authorization:`Bearer ${token()}` } });
       const data = await res.json();
-      if (!res.ok || !data.ok) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-danger)">⚠️ Error</td></tr>'; return; }
-      if (!data.detalle?.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Sin líneas</td></tr>'; return; }
-      const total = data.detalle.reduce((s,l)=>s+(Number(l.valor_historico_linea)||0),0);
+      if (!res.ok || !data.ok) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-danger)">⚠️ Error</td></tr>'; return; }
+      if (!data.detalle?.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Sin líneas</td></tr>'; return; }
+      const d0 = data.detalle[0] || {};
+      setText('modalSubtitulo', venta
+        ? `${venta.cliente || ''} • ${venta.fecha_formato || ''} • Cód. Cliente: ${d0.CodAux || '—'} • CanCod: ${d0.CanCod || '—'}`
+        : `Cód. Cliente: ${d0.CodAux || '—'} • CanCod: ${d0.CanCod || '—'}`);
+      const total = data.detalle.reduce((s,l)=>s+(Number(l.neto_total ?? l.TotLinea ?? 0)||0),0);
       tbody.innerHTML = data.detalle.map(l=>`
         <tr>
           <td><code>${escHtml(l.CodProd) || '—'}</code></td>
           <td>${escHtml(l.DesProd) || '—'}</td>
           <td style="text-align:center">${l.CantFacturada ?? '—'}</td>
-          <td style="text-align:right">${formatCLP(l.precio_unitario_historico)}</td>
-          <td style="text-align:right"><strong>${formatCLP(l.valor_historico_linea)}</strong></td>
+          <td style="text-align:right">${formatCLP(l.precio_real)}</td>
+          <td style="text-align:right">${formatCLP(l.precio_vta ?? l.PrecioVta)}</td>
+          <td style="text-align:right">${formatCLP(l.neto_real)}</td>
+          <td style="text-align:right"><strong>${formatCLP(l.neto_total ?? l.TotLinea)}</strong></td>
+          <td style="text-align:right">${Number.isFinite(Number(l.dcto)) && Number(l.dcto) > 0 ? `${Math.round(Number(l.dcto))}%` : '—'}</td>
         </tr>`).join('');
       setText('modalTotalValor', formatCLP(total));
-    } catch(err) { console.error('[abrirDetalle]',err); tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--color-danger)">&#x26A0;&#xFE0F; Error</td></tr>'; }
+    } catch(err) { console.error('[abrirDetalle]',err); tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-danger)">&#x26A0;&#xFE0F; Error</td></tr>'; }
   }
 
   function cerrarModal() {
@@ -500,7 +503,7 @@
     const tbody = document.getElementById(tbodyId);
     if (!tbody) return;
     if (!lista.length) {
-      tbody.innerHTML = `<tr class="tabla-empty"><td colspan="6">${mensajeVacio}</td></tr>`;
+      tbody.innerHTML = `<tr class="tabla-empty"><td colspan="5">${mensajeVacio}</td></tr>`;
       return;
     }
     tbody.innerHTML = lista.map(c => {
@@ -513,20 +516,12 @@
       const tel2Html = c.FonAux2
         ? `<a href="tel:${escHtml(c.FonAux2)}" style="color:var(--color-primary);text-decoration:none">${escHtml(c.FonAux2)}</a>`
         : '—';
-      const codEnc = encodeURIComponent(c.CodAux || '');
-      const historialHtml = c.CodAux
-        ? `<a href="${HISTORIAL_URL}?cliente=${codEnc}" class="btn-historial-cliente" title="Ver historial de ${escHtml(c.NomAux || c.CodAux)}">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            Ver
-          </a>`
-        : '—';
       return `<tr>
           <td><code>${escHtml(c.CodAux) || '—'}</code></td>
           <td>${escHtml(c.NomAux) || '—'}</td>
           <td>${tel1Html}</td>
           <td>${tel2Html}</td>
           <td>${emailHtml}</td>
-          <td style="text-align:center">${historialHtml}</td>
         </tr>`;
     }).join('');
   }
@@ -753,3 +748,4 @@
   else init();
 
 })();
+

@@ -136,7 +136,7 @@
     });
 
     const nav = document.getElementById('sidebarNav');
-    if (nav) nav.innerHTML = `
+    if (!window.__APP_SIDEBAR_LOADED__ && nav) nav.innerHTML = `
       <span class="nav-section-title">NAVEGACIÓN</span>
       <a class="nav-item active" href="#">
         <span style="font-size:1rem">⚙️</span>
@@ -177,7 +177,7 @@
       selMes.appendChild(o);
     });
 
-    for (let y = _anio; y >= 2023; y--) {
+    for (let y = _anio; y >= 2026; y--) {
       const o = document.createElement('option');
       o.value = y; o.textContent = y;
       if (y === _anio) o.selected = true;
@@ -432,3 +432,4 @@
   else init();
 
 })();
+

@@ -76,9 +76,15 @@ app.use((req, res, next) => {
   next();
 });
 
+const LOGIN_RATE_LIMIT_WINDOW_MS = Number(process.env.LOGIN_RATE_LIMIT_WINDOW_MS || (15 * 60 * 1000));
+const LOGIN_RATE_LIMIT_MAX = Number(
+  process.env.LOGIN_RATE_LIMIT_MAX
+  || (process.env.NODE_ENV === 'production' ? 10 : 25)
+);
+
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: LOGIN_RATE_LIMIT_WINDOW_MS,
+  max: LOGIN_RATE_LIMIT_MAX,
   standardHeaders: true,
   legacyHeaders: false,
   message: { ok: false, error: 'Demasiados intentos. Intenta en 15 minutos.' },
@@ -136,9 +142,11 @@ app.get('/api/dashboard/detalle/:folio', requireAuth, async (req, res) => {
 });
 
 // Orden importante:
-// 1) dashboardAjustesRoutes corrige prorrateo de ventas compartidas.
-// 2) dashboardPanelRoutes corrige /asignados por fecha del registro.
-// 3) dashboardRoutes conserva el resto de endpoints originales.
+// El orden de montaje define qué router responde cuando hay endpoints repetidos.
+// 1) dashboardAjustesRoutes debe ir antes que dashboardRoutes porque contiene
+//    la lógica ajustada de /resumen, /evolucion y /ventas-mes.
+// 2) dashboardPanelRoutes debe ir antes que dashboardRoutes porque contiene
+//    la lógica vigente de /asignados.
 app.use('/api/dashboard',       dashboardAjustesRoutes);
 app.use('/api/dashboard',       dashboardPanelRoutes);
 app.use('/api/dashboard',       dashboardRoutes);

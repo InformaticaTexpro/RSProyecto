@@ -89,8 +89,8 @@ async function getResumenPorVendedor({ codigos, mes, anio }) {
      AND gsaen.NroInt  = gmovi.NroInt
     INNER JOIN [PRODIN].[softland].[cwtvend] cwtvend
       ON cwtvend.VenCod = gsaen.CodVendedor
-    INNER JOIN [PRODIN].[softland].[iw_tprod] tprod
-      ON tprod.CodProd = gmovi.CodProd
+    LEFT JOIN [PRODIN].[softland].[iw_tprod] tprod
+      ON LTRIM(RTRIM(tprod.CodProd)) = LTRIM(RTRIM(gmovi.CodProd))
     LEFT JOIN [PRODIN].[softland].[cwtcvcl] cvl
       ON cvl.CodAux = gsaen.CodAux
     WHERE gsaen.Tipo         IN ('F','N','D')
@@ -152,6 +152,7 @@ async function getVentas({ codigos, mes, anio }) {
   const result = await request.query(`
     SELECT
       gsaen.Folio,
+      gsaen.Tipo,
       CONVERT(VARCHAR(10), gsaen.Fecha, 103) AS fecha_formato,
       gsaen.SubTotal                         AS monto,
       gsaen.CodVendedor,
@@ -166,7 +167,10 @@ async function getVentas({ codigos, mes, anio }) {
       AND YEAR(gsaen.Fecha)  =   @anio
       AND gsaen.Tipo         IN ('F','N','D')
       AND gsaen.Estado       <>  'A'
-    ORDER BY gsaen.Fecha DESC
+    ORDER BY
+      CASE gsaen.Tipo WHEN 'F' THEN 1 WHEN 'N' THEN 2 WHEN 'D' THEN 3 ELSE 9 END,
+      gsaen.Folio ASC,
+      gsaen.Fecha ASC
   `);
 
   return result.recordset;
@@ -193,11 +197,14 @@ async function getMontoFolio({ folio, anio }) {
   return result.recordset[0] ?? null;
 }
 
-async function getDetalleFolio({ folio }) {
+async function getDetalleFolio({ folio, anio = null }) {
   const pool    = await getSoftlandPool();
   const request = pool.request();
 
   request.input('folio', sql.Int, Number(folio));
+  if (anio != null && anio !== '') {
+    request.input('anio', sql.Int, Number(anio));
+  }
 
   const divisorCASE         = await buildDivisorCASE(db, 'gsaen.Fecha');
   const precioListaRealCASE = await buildPrecioListaRealCASE(db, {
@@ -214,6 +221,7 @@ async function getDetalleFolio({ folio }) {
     SELECT
       gsaen.Folio,
       gsaen.Fecha,
+      gsaen.Tipo                                               AS tipo_folio,
       gsaen.CodVendedor,
       gsaen.CanCod,
       RTRIM(gsaen.CodAux)                                         AS CodAux,
@@ -223,7 +231,13 @@ async function getDetalleFolio({ folio }) {
       tprod.DesProd,
       gmovi.CantFacturada,
       gmovi.TotLinea,
-      tprod.PrecioVta,
+      gmovi.PreUniMB,
+      gmovi.PreUniMVta,
+      gmovi.PreUniMOrig,
+      gmovi.PorcDescMov01,
+      gmovi.DescMov01,
+      gmovi.TotalDescMov,
+      tprod.PrecioVta                                           AS precio_real_oficial,
       ${divisorCASE}                                              AS divisor_historico,
       CASE WHEN cvl.CodCan = 301 THEN 1.10 ELSE 1.0 END          AS factor_canal,
       (${precioListaRealCASE})                                    AS precio_lista_real
@@ -231,8 +245,8 @@ async function getDetalleFolio({ folio }) {
     INNER JOIN [PRODIN].[softland].[iw_gsaen] gsaen
       ON gsaen.NroInt = gmovi.NroInt
      AND gsaen.Tipo   = gmovi.Tipo
-    INNER JOIN [PRODIN].[softland].[iw_tprod] tprod
-      ON tprod.CodProd = gmovi.CodProd
+    LEFT JOIN [PRODIN].[softland].[iw_tprod] tprod
+      ON LTRIM(RTRIM(tprod.CodProd)) = LTRIM(RTRIM(gmovi.CodProd))
     INNER JOIN [PRODIN].[softland].[cwtauxi] cwtauxi
       ON cwtauxi.CodAux = gsaen.CodAux
     LEFT JOIN [PRODIN].[softland].[cwtcvcl] cvl
@@ -240,6 +254,7 @@ async function getDetalleFolio({ folio }) {
     WHERE gsaen.Tipo   IN ('F','N','D')
       AND gsaen.Estado <>  'A'
       AND gsaen.Folio  =   @folio
+      ${anio != null && anio !== '' ? 'AND YEAR(gsaen.Fecha) = @anio' : ''}
   ),
   calc AS (
     SELECT *,
@@ -262,9 +277,15 @@ async function getDetalleFolio({ folio }) {
     DesProd,
     CantFacturada,
     TotLinea,
+    PreUniMB,
+    PreUniMVta,
+    PreUniMOrig,
+    PorcDescMov01,
+    DescMov01,
+    TotalDescMov,
+    precio_real_oficial,
     precio_unitario_cobrado,
     precio_unitario_cobrado_hist,
-    PrecioVta,
     precio_lista_real,
     precio_lista_real                                                       AS precio_historico_base,
     precio_historico_ajustado,
@@ -282,7 +303,48 @@ async function getDetalleFolio({ folio }) {
   ORDER BY CodProd
   `);
 
-  return result.recordset;
+  return result.recordset.map(row => {
+    const cantFacturada = Number(row.CantFacturada) || 0;
+    const totLinea      = Number(row.TotLinea) || 0;
+    const precioRealUnit = Number(row.precio_real_oficial ?? row.PrecioVta ?? row.PreUniMB);
+    const precioReal     = Number.isFinite(precioRealUnit) && precioRealUnit > 0
+      ? Math.round(precioRealUnit)
+      : null;
+    const precioVtaUnit  = cantFacturada !== 0 ? totLinea / cantFacturada : null;
+    const precioVta      = Number.isFinite(precioVtaUnit)
+      ? Math.round(precioVtaUnit)
+      : null;
+    const netoReal       = Number.isFinite(precioRealUnit) && precioRealUnit !== 0
+      ? Math.round(precioRealUnit * cantFacturada)
+      : null;
+    const netoTotal      = Math.round(totLinea);
+    const dctoPct        = netoReal && netoReal !== 0
+      ? ((netoReal - netoTotal) / netoReal) * 100
+      : null;
+    const dcto           = Number.isFinite(dctoPct)
+      ? Math.round(dctoPct)
+      : null;
+
+    return {
+      ...row,
+      tipo_folio:               row.tipo_folio ?? row.Tipo ?? row.tipo ?? '',
+      Tipo:                     row.tipo_folio ?? row.Tipo ?? row.tipo ?? '',
+      tipo:                     row.tipo_folio ?? row.Tipo ?? row.tipo ?? '',
+      TotLinea:                 netoTotal,
+      precio_real:              precioReal,
+      precio_vta:               precioVta,
+      neto_real:                netoReal,
+      neto_total:               netoTotal,
+      dcto,
+      PrecioReal:               precioReal,
+      PrecioVta:                precioVta,
+      NetoReal:                 netoReal,
+      NetoTotal:                netoTotal,
+      Dcto:                     dcto,
+      precio_unitario_cobrado:  precioVta,
+      valor_cobrado_linea:      netoTotal,
+    };
+  });
 }
 
 async function getDescuentosVendedor({ codigos, mes, anio }) {

@@ -101,6 +101,12 @@
 
   function getModuloPrincipal(user) {
     const area = normalizarArea(user?.area);
+    if (area === 'admin' || area === 'administracion') {
+      return DASHBOARD_URL;
+    }
+    if (!MODULOS_PRINCIPALES[area] && user?.is_admin) {
+      return DASHBOARD_URL;
+    }
     return MODULOS_PRINCIPALES[area] || DASHBOARD_URL;
   }
 
@@ -144,12 +150,19 @@
       catch { throw new Error('Respuesta inesperada del servidor.'); }
 
       if (!res.ok || !data.ok) {
-        mostrarError(data.error || 'Credenciales incorrectas.');
+        const mensajeFallback = res.status === 429
+          ? 'Demasiados intentos. Intenta nuevamente en unos minutos.'
+          : 'Credenciales incorrectas o usuario inactivo.';
+        mostrarError(data.error || mensajeFallback);
         setLoading(false);
         return;
       }
 
       // ── Guardar sesión ──────────────────────────────────────────
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('usuario');
+      sessionStorage.removeItem('texpro_user');
       if (data.token) localStorage.setItem('token', data.token);
       guardarUsuario(data.user);
 

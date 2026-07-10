@@ -7,11 +7,10 @@
  * - Fusiona ventas asignadas con ventas del mes solo en el Dashboard principal.
  * - Activa auto-refresh global de filtros mes/año reutilizando #btnActualizar,
  *   por lo que cada pantalla mantiene su overlay "Cargando datos..." actual.
- arivera
+ 
  * - Agrega el acceso al módulo Gerencia en el sidebar para usuarios administradores.
 
  * - Carga la sidebar central por módulos desplegables cuando existe #sidebarNav.
- main
  */
 
 (function () {
@@ -147,7 +146,6 @@
     });
   }
 
-arivera
   async function obtenerUsuarioActual() {
     const token = getToken();
     if (!token) return null;
@@ -190,28 +188,26 @@ arivera
   }
 
   async function activarMenuGerenciaAdmin() {
-    if (!debeFusionarVentasAsignadas()) return;
+  if (!debeFusionarVentasAsignadas()) return;
 
-    const usuario = await obtenerUsuarioActual();
-    if (!esAdmin(usuario)) return;
+  const usuario = await obtenerUsuarioActual();
+  if (!esAdmin(usuario)) return;
 
-    let intentos = 0;
-    const timer = setInterval(() => {
-      intentos += 1;
-      if (insertarMenuGerencia() || intentos >= 20) clearInterval(timer);
-    }, 150);
+  let intentos = 0;
+  const timer = setInterval(() => {
+    intentos += 1;
+    if (insertarMenuGerencia() || intentos >= 20) clearInterval(timer);
+  }, 150);
+}
 
-  function cargarSidebarModulos() {
-    if (!document.getElementById('sidebarNav')) return;
-    if (window.__APP_SIDEBAR_LOADED__) return;
-
-    window.__APP_SIDEBAR_LOADED__ = true;
-    const script = document.createElement('script');
-    script.src = '/src/assets/js/app-sidebar.js?v=1.0.0';
-    script.defer = true;
-    document.head.appendChild(script);
- main
-  }
+function cargarSidebarModulos() {
+  if (!document.getElementById('sidebarNav')) return;
+  if (window.__APP_SIDEBAR_LOADED__) return;
+  const script = document.createElement('script');
+  script.src = '/src/assets/js/app-sidebar.js?v=1.0.0';
+  script.defer = true;
+  document.head.appendChild(script);
+}
 
   async function cargarIndicadores() {
     const el = document.getElementById('headerIndicadores');
@@ -223,6 +219,11 @@ arivera
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) throw new Error(data?.error || 'HTTP ' + res.status);
+      if (data.disponible === false) {
+        el.innerHTML = '<span class="hind-error" title="Indicadores no disponibles temporalmente">USD/UF —</span>';
+        el.title = 'Indicadores no disponibles temporalmente';
+        return;
+      }
 
       const horaActualiz = new Date(data.actualizadoEn || Date.now()).toLocaleTimeString('es-CL', {
         hour: '2-digit', minute: '2-digit',
@@ -239,7 +240,7 @@ arivera
           <span class="hind-valor hind-valor--uf">$${fmt(data.uf?.valor, 2)}</span>
         </span>
       `;
-      el.title = `Fuente: ${data.fuente || 'indicadores'} | Última actualización: ${horaActualiz}`;
+      el.title = `Fuente: ${data.fuente || 'indicadores'}${data.stale ? ' (caché)' : ''} | Última actualización: ${horaActualiz}`;
     } catch (err) {
       console.warn('[indicadores-header]', err.message);
       el.innerHTML = '<span class="hind-error" title="No se pudo consultar /api/indicadores">USD/UF —</span>';
