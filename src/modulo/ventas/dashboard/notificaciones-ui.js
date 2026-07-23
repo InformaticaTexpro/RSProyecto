@@ -43,7 +43,7 @@
   }
 
   function labelDiasAlerta(dias) {
-    if (dias < 0)  return `Venció hace ${Math.abs(dias)} día${Math.abs(dias) !== 1 ? 's' : ''}`;
+    if (dias < 0)  return `Venci� hace ${Math.abs(dias)} d�a${Math.abs(dias) !== 1 ? 's' : ''}`;
     if (dias === 0) return '⚠️ Vence HOY';
     if (dias === 1) return '⚠️ Vence mañana';
     return `${dias} días restantes`;
@@ -107,7 +107,7 @@
           <li class="notif-item ${n.leida ? 'notif-item--leida' : ''}"
               data-id="${n.id}" data-fuente="notif"
               role="menuitem" tabindex="0"
-              title="${n.leida ? 'Leída' : 'Marcar como leída'}">
+              title="${n.leida ? 'Le�da' : 'Marcar como le�da'}">
             <div class="notif-icono ${ico.cls}">${ico.emoji}</div>
             <div class="notif-content">
               <div class="notif-titulo">${escHtml(n.titulo)}</div>
@@ -127,7 +127,7 @@
         const label = labelDiasAlerta(a.dias_restantes);
         const esMia = a.id_creador === _uid();
         const origen = esMia
-          ? `<span class="notif-alerta-origen notif-alerta-origen--propia">🔒 Propia</span>`
+          ? `<span class="notif-alerta-origen notif-alerta-origen--propia">= Propia</span>`
           : `<span class="notif-alerta-origen notif-alerta-origen--asignada">📌 ${escHtml(a.nombre_creador)}</span>`;
         return `
           <li class="notif-item notif-item--alerta notif-item--alerta-${u}"
@@ -141,7 +141,7 @@
               ${a.descripcion ? `<div class="notif-msg">${escHtml(a.descripcion)}</div>` : ''}
               <div class="notif-alerta-meta">${origen}</div>
             </div>
-            <span class="notif-alerta-badge notif-alerta-badge--${u}">${a.tipo === 'grupal' ? '👥' : '🔒'}</span>
+            <span class="notif-alerta-badge notif-alerta-badge--${u}">${a.tipo === 'grupal' ? '=e' : '='}</span>
           </li>`;
       }).join('');
     }
@@ -175,7 +175,7 @@
   function _uid() {
     try {
       const u = JSON.parse(sessionStorage.getItem('texpro_user') || 'null');
-      return u?.id ?? u?.sub ?? null;
+      return u?.id ? u?.sub ? null;
     } catch { return null; }
   }
 
@@ -225,7 +225,7 @@
     toast.className = `notif-toast${esSuperada ? ' notif-toast--superada' : ''}`;
     toast.setAttribute('role', 'alert');
     toast.innerHTML = `
-      <span class="toast-emoji">${esSuperada ? '🚀' : '🎯'}</span>
+      <span class="toast-emoji">${esSuperada ? '=�' : '<�'}</span>
       <div class="toast-body">
         <div class="toast-titulo">${escHtml(n.titulo)}</div>
         <div class="toast-msg">${escHtml(n.mensaje)}</div>

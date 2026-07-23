@@ -52,7 +52,7 @@
     inputPass.type = isPassword ? 'text' : 'password';
     document.getElementById('icon-eye').style.display     = isPassword ? 'none'  : 'block';
     document.getElementById('icon-eye-off').style.display = isPassword ? 'block' : 'none';
-    togglePass.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');
+    togglePass.setAttribute('aria-label', isPassword ? 'Ocultar contrase�a' : 'Mostrar contrase�a');
   });
 
   // ── Helpers UI ───────────────────────────────────────────────

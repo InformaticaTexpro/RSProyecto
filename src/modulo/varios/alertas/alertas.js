@@ -225,7 +225,7 @@ function urgencia(dias, completada) {
 
 function labelDias(dias, completada) {
   if (completada) return '✅ Completada';
-  if (dias < 0)   return `Venció hace ${Math.abs(dias)} día${Math.abs(dias) !== 1 ? 's' : ''}`;
+  if (dias < 0)   return `Venci� hace ${Math.abs(dias)} d�a${Math.abs(dias) !== 1 ? 's' : ''}`;
   if (dias === 0) return '⚠️ Vence HOY';
   if (dias === 1) return '⚠️ Vence mañana';
   return `${dias} días restantes`;
@@ -247,23 +247,23 @@ function cardHTML(a) {
   const frecLabel = FREC_LABEL[a.frecuencia_recordatorio] || '';
 
   const badgeOrigen = esMio
-    ? `<span class="alerta-origen-badge alerta-origen-badge--propia">🔒 Propia</span>`
+    ? `<span class="alerta-origen-badge alerta-origen-badge--propia">= Propia</span>`
     : `<span class="alerta-origen-badge alerta-origen-badge--asignada">📌 Asignada por ${escHtml(a.nombre_creador)}</span>`;
 
   const botonesAccion = a.completada
-    ? `<span class="alerta-estado-chip alerta-estado-chip--completada">✅ Completada</span>
-       ${puedeGestionar ? `<button class="btn-accion btn-accion--eliminar" data-accion="eliminar" data-id="${a.id}">🗑 Eliminar</button>` : ''}`
+    ? `<span class="alerta-estado-chip alerta-estado-chip--completada"> Completada</span>
+       ${puedeGestionar ? `<button class="btn-accion btn-accion--eliminar" data-accion="eliminar" data-id="${a.id}">=� Eliminar</button>` : ''}`
     : archivada
-    ? `<span class="alerta-estado-chip alerta-estado-chip--archivada">📦 Archivada</span>
-       ${puedeGestionar ? `<button class="btn-accion btn-accion--desarchivar" data-accion="desarchivar" data-id="${a.id}">↩ Desarchivar</button>` : ''}
-       ${puedeGestionar ? `<button class="btn-accion btn-accion--eliminar" data-accion="eliminar" data-id="${a.id}">🗑 Eliminar</button>` : ''}`
+    ? `<span class="alerta-estado-chip alerta-estado-chip--archivada">=� Archivada</span>
+       ${puedeGestionar ? `<button class="btn-accion btn-accion--desarchivar" data-accion="desarchivar" data-id="${a.id}">� Desarchivar</button>` : ''}
+       ${puedeGestionar ? `<button class="btn-accion btn-accion--eliminar" data-accion="eliminar" data-id="${a.id}">=� Eliminar</button>` : ''}`
     : `
-      ${puedeGestionar ? `<button class="btn-accion btn-accion--archivar"   data-accion="archivar"   data-id="${a.id}">📦 Archivar</button>` : ''}
-      ${puedeGestionar ? `<button class="btn-accion btn-accion--completar"  data-accion="completar"  data-id="${a.id}">✅ Completar</button>` : ''}
-      ${puedeGestionar ? `<button class="btn-accion btn-accion--editar"     data-accion="editar"     data-id="${a.id}">✏️ Editar</button>`    : ''}
-      ${puedeGestionar && a.activa ? `<button class="btn-accion btn-accion--desactivar" data-accion="desactivar" data-id="${a.id}">🔕 Desactivar</button>` : ''}
-      ${puedeGestionar && !a.activa && !a.completada ? `<button class="btn-accion btn-accion--activar" data-accion="activar" data-id="${a.id}">▶ Activar</button>` : ''}
-      ${puedeGestionar ? `<button class="btn-accion btn-accion--eliminar"   data-accion="eliminar"   data-id="${a.id}">🗑 Eliminar</button>`  : ''}
+      ${puedeGestionar ? `<button class="btn-accion btn-accion--archivar"   data-accion="archivar"   data-id="${a.id}">=� Archivar</button>` : ''}
+      ${puedeGestionar ? `<button class="btn-accion btn-accion--completar"  data-accion="completar"  data-id="${a.id}"> Completar</button>` : ''}
+      ${puedeGestionar ? `<button class="btn-accion btn-accion--editar"     data-accion="editar"     data-id="${a.id}"> Editar</button>`    : ''}
+      ${puedeGestionar && a.activa ? `<button class="btn-accion btn-accion--desactivar" data-accion="desactivar" data-id="${a.id}">= Desactivar</button>` : ''}
+      ${puedeGestionar && !a.activa && !a.completada ? `<button class="btn-accion btn-accion--activar" data-accion="activar" data-id="${a.id}">� Activar</button>` : ''}
+      ${puedeGestionar ? `<button class="btn-accion btn-accion--eliminar"   data-accion="eliminar"   data-id="${a.id}">=� Eliminar</button>`  : ''}
     `;
 
   return `
@@ -277,7 +277,7 @@ function cardHTML(a) {
             <div class="alerta-titulo-card" title="${escHtml(a.titulo)}">${escHtml(a.titulo)}</div>
             <div class="alerta-badges-row">
               <span class="alerta-tipo-badge alerta-tipo-badge--${a.tipo}">
-                ${a.tipo === 'grupal' ? '👥 Grupal' : '🔒 Personal'}
+                ${a.tipo === 'grupal' ? '=e Grupal' : '= Personal'}
               </span>
               ${badgeOrigen}
             </div>
@@ -291,7 +291,7 @@ function cardHTML(a) {
           ${frecLabel ? `<span class="alerta-frec-badge">${frecLabel}</span>` : ''}
         </div>
         ${a.tipo === 'grupal' && a.destinatarios_nombres
-          ? `<div class="alerta-destinatarios">👥 ${escHtml(a.destinatarios_nombres)}</div>`
+          ? `<div class="alerta-destinatarios">=e ${escHtml(a.destinatarios_nombres)}</div>`
           : ''}
       </div>
       <div class="alerta-card-acciones">${botonesAccion}</div>
@@ -421,13 +421,13 @@ async function guardarAlerta(e) {
 
 async function accionAlerta(id, accion) {
   const msgs = {
-    archivar:   '¿Archivar esta alerta para ocultarla de la campana?',
-    completar:  '¿Marcar esta alerta como completada?',
-    desactivar: '¿Desactivar esta alerta? Se ocultará pero no se eliminará.',
-    activar:    '¿Activar esta alerta nuevamente?',
-    desarchivar:'¿Desarchivar esta alerta para volver a mostrarla en la campana?',
+    archivar:   '�Archivar esta alerta para ocultarla de la campana?',
+    completar:  '�Marcar esta alerta como completada?',
+    desactivar: '�Desactivar esta alerta? Se ocultar� pero no se eliminar�.',
+    activar:    '�Activar esta alerta nuevamente?',
+    desarchivar:'�Desarchivar esta alerta para volver a mostrarla en la campana?',
   };
-  if (!confirm(msgs[accion] || '¿Confirmar?')) return;
+  if (!confirm(msgs[accion] || '�Confirmar?')) return;
   try {
     const r = await fetch(`${API}/${id}/${accion}`, { method: 'PATCH', headers: headers() });
     const j = await r.json();
@@ -440,7 +440,7 @@ async function accionAlerta(id, accion) {
 }
 
 async function eliminarAlerta(id) {
-  if (!confirm('¿Eliminar esta alerta permanentemente? Esta acción no se puede deshacer.')) return;
+  if (!confirm('�Eliminar esta alerta permanentemente? Esta acci�n no se puede deshacer.')) return;
   try {
     const r = await fetch(`${API}/${id}`, { method: 'DELETE', headers: headers() });
     const j = await r.json();
@@ -469,7 +469,7 @@ async function mostrarRecordatorioLogin() {
         day: '2-digit', month: 'short', year: 'numeric',
       });
       const badgeOrigen = a.id_creador !== USUARIO.id
-        ? `<span class="rec-asignada-badge">📌 Asignada por ${escHtml(a.nombre_creador)}</span>`
+        ? `<span class="rec-asignada-badge">=� Asignada por ${escHtml(a.nombre_creador)}</span>`
         : '';
       return `
         <li class="rec-item rec-item--${u}" id="rec-${a.id}">

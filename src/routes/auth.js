@@ -64,7 +64,7 @@ function normalizarMenus(menus) {
       url: String(menu?.url || '').trim(),
       icono: String(menu?.icono || '').trim(),
       grupo: String(menu?.grupo || 'General').trim() || 'General',
-      orden: Number(menu?.orden ?? 0) || 0,
+      orden: Number(menu?.orden ? 0) || 0,
     }))
     .filter(menu => menu.id !== null && menu.url);
 }

@@ -1,15 +1,15 @@
 'use strict';
 
 /**
- * indicadores-header.js — RSProyecto Texpro
+ * indicadores-header.js � RSProyecto Texpro
  *
  * - Carga USD y UF desde /api/indicadores y los muestra en #headerIndicadores.
  * - Fusiona ventas asignadas con ventas del mes solo en el Dashboard principal.
- * - Activa auto-refresh global de filtros mes/año reutilizando #btnActualizar,
+ * - Activa auto-refresh global de filtros mes/a�o reutilizando #btnActualizar,
  *   por lo que cada pantalla mantiene su overlay "Cargando datos..." actual.
- * - Agrega el acceso al módulo Gerencia en el sidebar para usuarios administradores.
+ * - Agrega el acceso al m�dulo Gerencia en el sidebar para usuarios administradores.
 
- * - Carga la sidebar central por módulos desplegables cuando existe #sidebarNav.
+ * - Carga la sidebar central por m�dulos desplegables cuando existe #sidebarNav.
  */
 
 (function () {
@@ -29,7 +29,7 @@
   }
 
   function fmt(valor, decimales) {
-    if (valor == null || Number.isNaN(Number(valor))) return '—';
+    if (valor == null || Number.isNaN(Number(valor))) return '�';
     return new Intl.NumberFormat('es-CL', {
       minimumFractionDigits: decimales,
       maximumFractionDigits: decimales,
@@ -52,7 +52,7 @@
 
   function getAlertasSessionKey() {
     const usuario = getUsuarioSesion();
-    const id = usuario?.id ?? usuario?.sub ?? usuario?.usuario_id ?? null;
+    const id = usuario?.id ? usuario?.sub ? usuario?.usuario_id ? null;
     return `${ALERTAS_SESSION_PREFIX}${id || 'anon'}`;
   }
 
@@ -70,7 +70,7 @@
   }
 
   function formatFechaCL(fecha) {
-    if (!fecha) return '—';
+    if (!fecha) return '�';
     const s = String(fecha).substring(0, 10);
     const parts = s.split('-');
     if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -99,7 +99,7 @@
   }
 
   function formatFechaCorta(fecha) {
-    if (!fecha) return '—';
+    if (!fecha) return '�';
     const s = String(fecha).substring(0, 10);
     const parts = s.split('-');
     if (parts.length !== 3) return s;
@@ -434,21 +434,21 @@
   function renderAlertaItemGlobal(a) {
     const dias = Number(a.dias_restantes);
     const diasTxt = Number.isFinite(dias)
-      ? (dias === 0 ? 'Vence hoy' : dias === 1 ? 'Vence mañana' : `${dias} días restantes`)
+      ? (dias === 0 ? 'Vence hoy' : dias === 1 ? 'Vence ma�ana' : `${dias} d�as restantes`)
       : 'Sin fecha';
     const fecha = formatFechaCorta(a.fecha_vence);
     return `
       <article class="texpro-alerta-item" data-alerta-id="${a.id}">
         <div class="texpro-alerta-top">
           <div>
-            <h4 class="texpro-alerta-title">${escapeHtml(a.titulo || 'Sin título')}</h4>
+            <h4 class="texpro-alerta-title">${escapeHtml(a.titulo || 'Sin t�tulo')}</h4>
             ${a.descripcion ? `<p class="texpro-alertas-desc">${escapeHtml(a.descripcion)}</p>` : ''}
           </div>
           <span class="texpro-alerta-badge">${escapeHtml(diasTxt)}</span>
         </div>
         <div class="texpro-alerta-meta">
           <span>Fecha: <strong>${escapeHtml(fecha)}</strong></span>
-          <span>Tipo: <strong>${escapeHtml(a.tipo || '—')}</strong></span>
+          <span>Tipo: <strong>${escapeHtml(a.tipo || '�')}</strong></span>
           <span>Estado: <strong>${a.completada ? 'Completada' : 'Activa'}</strong></span>
           ${a.nombre_creador ? `<span>Creador: <strong>${escapeHtml(a.nombre_creador)}</strong></span>` : ''}
           ${a.frecuencia_recordatorio ? `<span>Frecuencia: <strong>${escapeHtml(a.frecuencia_recordatorio)}</strong></span>` : ''}
@@ -474,12 +474,12 @@
       overlay.innerHTML = `
         <div class="texpro-alertas-pendientes-panel" role="dialog" aria-modal="true" aria-labelledby="texproAlertasPendientesTitle">
           <div class="texpro-alertas-pendientes-header">
-            <div class="texpro-alertas-pendientes-icon">🔔</div>
+            <div class="texpro-alertas-pendientes-icon">??</div>
             <div>
               <h3 class="texpro-alertas-pendientes-title" id="texproAlertasPendientesTitle">Recordatorios pendientes</h3>
-              <p class="texpro-alertas-pendientes-sub">Tienes alertas activas que requieren tu atención</p>
+              <p class="texpro-alertas-pendientes-sub">Tienes alertas activas que requieren tu atenci�n</p>
             </div>
-            <button type="button" class="texpro-alertas-pendientes-close" data-accion="cerrar" aria-label="Cerrar">×</button>
+            <button type="button" class="texpro-alertas-pendientes-close" data-accion="cerrar" aria-label="Cerrar">�</button>
           </div>
           <div class="texpro-alertas-pendientes-list" data-alertas-lista></div>
           <div class="texpro-alertas-pendientes-footer">
@@ -590,7 +590,7 @@
     if (alertas === null) {
       lista.innerHTML = `
         <div class="texpro-alerta-empty">
-          <div class="texpro-alertas-pendientes-icon" style="margin-bottom:.65rem">⚠️</div>
+          <div class="texpro-alertas-pendientes-icon" style="margin-bottom:.65rem">??</div>
           <strong>No se pudieron cargar las alertas</strong>
           <div style="margin-top:.25rem">Intenta nuevamente en unos segundos.</div>
         </div>
@@ -601,7 +601,7 @@
     if (!alertas || !alertas.length) {
       lista.innerHTML = `
         <div class="texpro-alerta-empty">
-          <div class="texpro-alertas-pendientes-icon" style="margin-bottom:.65rem">🔔</div>
+          <div class="texpro-alertas-pendientes-icon" style="margin-bottom:.65rem">??</div>
           <strong>Sin alertas pendientes</strong>
           <div style="margin-top:.25rem">No tienes alertas activas en este momento.</div>
         </div>
@@ -650,7 +650,7 @@
     if (lista) {
       lista.innerHTML = `
         <div class="texpro-alerta-empty">
-          <div class="texpro-alertas-pendientes-icon" style="margin-bottom:.65rem">⏳</div>
+          <div class="texpro-alertas-pendientes-icon" style="margin-bottom:.65rem">?</div>
           <strong>Cargando alertas...</strong>
         </div>
       `;
@@ -671,7 +671,7 @@
     wrap.className = 'texpro-alertas-campana-wrap';
     wrap.innerHTML = `
       <button type="button" class="texpro-alertas-campana-btn" id="${ALERTAS_BELL_ID}" aria-label="Alertas" aria-expanded="false" aria-haspopup="true">
-        <span aria-hidden="true">🔔</span>
+        <span aria-hidden="true">??</span>
         <span class="texpro-alertas-campana-badge" id="${ALERTAS_BELL_BADGE_ID}" style="display:none">0</span>
       </button>
       <div class="texpro-alertas-campana-panel" id="${ALERTAS_BELL_PANEL_ID}" aria-hidden="true">
@@ -680,7 +680,7 @@
             <h3>Alertas activas</h3>
             <p>Resumen general de tus alertas pendientes</p>
           </div>
-          <button type="button" class="texpro-alertas-campana-close" data-accion="cerrar-campana" aria-label="Cerrar">×</button>
+          <button type="button" class="texpro-alertas-campana-close" data-accion="cerrar-campana" aria-label="Cerrar">�</button>
         </div>
         <div class="texpro-alertas-campana-list" id="${ALERTAS_BELL_LIST_ID}" data-alertas-campana-lista></div>
         <div class="texpro-alertas-campana-footer">
@@ -792,7 +792,7 @@
         return fetchMergedVentasMes(input, init);
       }
     } catch {
-      // Mantener comportamiento original si no es una URL estándar.
+      // Mantener comportamiento original si no es una URL est�ndar.
     }
     return originalFetch(input, init);
   };
@@ -850,10 +850,10 @@
     link.className = 'nav-item';
     link.href = '../../gerencia/index.html';
     link.dataset.module = 'gerencia';
-    link.innerHTML = '<span style="font-size:1rem">📈</span><span class="nav-label">Gerencia</span>';
+    link.innerHTML = '<span style="font-size:1rem">??</span><span class="nav-label">Gerencia</span>';
 
     const adminLink = Array.from(nav.querySelectorAll('.nav-item')).find(item =>
-      item.textContent.trim().toLowerCase().includes('administración')
+      item.textContent.trim().toLowerCase().includes('administraci�n')
     );
 
     if (adminLink) nav.insertBefore(link, adminLink);
@@ -895,7 +895,7 @@ function cargarSidebarModulos() {
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) throw new Error(data?.error || 'HTTP ' + res.status);
       if (data.disponible === false) {
-        el.innerHTML = '<span class="hind-error" title="Indicadores no disponibles temporalmente">USD/UF —</span>';
+        el.innerHTML = '<span class="hind-error" title="Indicadores no disponibles temporalmente">USD/UF �</span>';
         el.title = 'Indicadores no disponibles temporalmente';
         return;
       }
@@ -905,20 +905,20 @@ function cargarSidebarModulos() {
       });
 
       el.innerHTML = `
-        <span class="hind-item" title="USD/CLP — actualizado ${horaActualiz}">
+        <span class="hind-item" title="USD/CLP � actualizado ${horaActualiz}">
           <span class="hind-label">USD</span>
           <span class="hind-valor hind-valor--usd">$${fmt(data.dolar?.valor, 2)}</span>
         </span>
         <span class="hind-sep" aria-hidden="true">|</span>
-        <span class="hind-item" title="Unidad de Fomento — actualizado ${horaActualiz}">
+        <span class="hind-item" title="Unidad de Fomento � actualizado ${horaActualiz}">
           <span class="hind-label">UF</span>
           <span class="hind-valor hind-valor--uf">$${fmt(data.uf?.valor, 2)}</span>
         </span>
       `;
-      el.title = `Fuente: ${data.fuente || 'indicadores'}${data.stale ? ' (caché)' : ''} | Última actualización: ${horaActualiz}`;
+      el.title = `Fuente: ${data.fuente || 'indicadores'}${data.stale ? ' (cach�)' : ''} | �ltima actualizaci�n: ${horaActualiz}`;
     } catch (err) {
       console.warn('[indicadores-header]', err.message);
-      el.innerHTML = '<span class="hind-error" title="No se pudo consultar /api/indicadores">USD/UF —</span>';
+      el.innerHTML = '<span class="hind-error" title="No se pudo consultar /api/indicadores">USD/UF �</span>';
     }
   }
 

@@ -78,8 +78,8 @@ router.get('/', async (req, res) => {
     let mes, anio;
     try {
       ({ mes, anio } = validarMesAnio(
-        req.query.mes ?? (hoy.getMonth() + 1),
-        req.query.anio ?? hoy.getFullYear()
+        req.query.mes ? (hoy.getMonth() + 1),
+        req.query.anio ? hoy.getFullYear()
       ));
     } catch (err) {
       return res.status(400).json({ ok: false, error: err.message });

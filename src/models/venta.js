@@ -47,7 +47,7 @@ async function getTotalVentas({ codigos, mes, anio }) {
       AND YEAR(enc.Fecha)  =   @anio
   `);
 
-  return result.recordset[0]?.total_ventas ?? 0;
+  return result.recordset[0]?.total_ventas ? 0;
 }
 
 async function getResumenPorVendedor({ codigos, mes, anio }) {
@@ -194,7 +194,7 @@ async function getMontoFolio({ folio, anio }) {
       AND Estado <>  'A'
   `);
 
-  return result.recordset[0] ?? null;
+  return result.recordset[0] ? null;
 }
 
 async function getDetalleFolio({ folio, anio = null }) {
@@ -306,7 +306,7 @@ async function getDetalleFolio({ folio, anio = null }) {
   return result.recordset.map(row => {
     const cantFacturada = Number(row.CantFacturada) || 0;
     const totLinea      = Number(row.TotLinea) || 0;
-    const precioRealUnit = Number(row.precio_real_oficial ?? row.PrecioVta ?? row.PreUniMB);
+    const precioRealUnit = Number(row.precio_real_oficial ? row.PrecioVta ? row.PreUniMB);
     const precioReal     = Number.isFinite(precioRealUnit) && precioRealUnit > 0
       ? Math.round(precioRealUnit)
       : null;
@@ -327,9 +327,9 @@ async function getDetalleFolio({ folio, anio = null }) {
 
     return {
       ...row,
-      tipo_folio:               row.tipo_folio ?? row.Tipo ?? row.tipo ?? '',
-      Tipo:                     row.tipo_folio ?? row.Tipo ?? row.tipo ?? '',
-      tipo:                     row.tipo_folio ?? row.Tipo ?? row.tipo ?? '',
+      tipo_folio:               row.tipo_folio ? row.Tipo ? row.tipo ? '',
+      Tipo:                     row.tipo_folio ? row.Tipo ? row.tipo ? '',
+      tipo:                     row.tipo_folio ? row.Tipo ? row.tipo ? '',
       TotLinea:                 netoTotal,
       precio_real:              precioReal,
       precio_vta:               precioVta,

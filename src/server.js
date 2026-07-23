@@ -135,7 +135,7 @@ app.get('/api/dashboard/detalle/:folio', requireAuth, async (req, res) => {
     res.json({ ok: true, folio, detalle });
   } catch (err) {
     const msg = err.message || 'Error al obtener detalle del folio';
-    const status = msg.toLowerCase().includes('inválid') ? 400 : 500;
+    const status = msg.toLowerCase().includes('inv�lid') ? 400 : 500;
     console.error('[GET /api/dashboard/detalle]', msg);
     res.status(status).json({ ok: false, error: status === 400 ? msg : 'Error al obtener detalle del folio' });
   }

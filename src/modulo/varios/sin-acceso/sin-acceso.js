@@ -73,7 +73,7 @@
     const menus = Array.isArray(user.menus) ? user.menus : [];
 
     return {
-      id: user.id ?? user.usuario_id ?? user.sub ?? '',
+      id: user.id ? user.usuario_id ? user.sub ? '',
       nombre: user.nombre || user.name || user.usuario || user.email || 'Usuario',
       email: user.email || user.correo || '',
       usuario: user.usuario || user.username || '',
@@ -94,11 +94,11 @@
     return (menus || [])
       .filter(menu => menu && (menu.url || menu.nombre))
       .map(menu => ({
-        id: menu.id ?? null,
+        id: menu.id ? null,
         codigo: normalizarTexto(menu.codigo),
         nombre: String(menu.nombre || '').trim(),
         url: normalizarUrl(menu.url),
-        orden: Number(menu.orden ?? 0) || 0,
+        orden: Number(menu.orden ? 0) || 0,
       }))
       .sort((a, b) => (a.orden - b.orden) || a.nombre.localeCompare(b.nombre, 'es'));
   }
@@ -137,7 +137,7 @@
     }
 
     const nombre = usuario?.nombre || usuario?.email || usuario?.usuario || 'Usuario';
-    const area = usuario?.area || 'Sin área asignada';
+    const area = usuario?.area || 'Sin �rea asignada';
     const principal = obtenerPrimerMenuPermitido(usuario) || null;
 
     return {
@@ -156,7 +156,7 @@
     setText('usuarioNombre', datos.nombre);
     setText('usuarioArea', datos.area);
     setText('moduloSolicitado', moduloSolicitado);
-    setText('moduloPrincipal', datos.principal?.nombre || 'Sin módulo asignado');
+    setText('moduloPrincipal', datos.principal?.nombre || 'Sin m�dulo asignado');
 
     const btnVolver = document.getElementById('btnVolverModulo');
     if (btnVolver) btnVolver.href = datos.href;
@@ -176,7 +176,7 @@
 
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.ok || !data?.user) {
-        throw new Error(data?.error || 'Sesión no disponible');
+        throw new Error(data?.error || 'Sesi�n no disponible');
       }
 
       const usuario = normalizarUsuario(data.user);

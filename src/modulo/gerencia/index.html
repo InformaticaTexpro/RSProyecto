@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+?<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Texpro â€” Gerencia Comercial</title>
+  <title>Texpro � Gerencia Comercial</title>
   <link rel="icon" type="image/png" href="../../assets/images/Isotipo-TEXPRO.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +16,7 @@
     <div class="sidebar-header">
       <img src="../../assets/images/Isotipo-TEXPRO_fondo_blanco.png" alt="Texpro" class="sidebar-logo" onerror="this.style.display='none'" />
       <span class="sidebar-brand">TEXPRO</span>
-      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar menÃº">â€¹</button>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar men�">�</button>
     </div>
     <nav class="sidebar-nav" id="sidebarNav"></nav>
     <div class="sidebar-footer">
@@ -27,8 +27,8 @@
           <span class="user-area" id="userArea">Comercial</span>
         </div>
       </div>
-      <button class="btn-logout" id="btnLogout" title="Cerrar sesiÃ³n">
-        <span>âŽ‹</span><span class="btn-logout-text">Cerrar sesiÃ³n</span>
+      <button class="btn-logout" id="btnLogout" title="Cerrar sesi�n">
+        <span>?</span><span class="btn-logout-text">Cerrar sesi�n</span>
       </button>
     </div>
   </aside>
@@ -36,7 +36,7 @@
   <div class="main-wrapper" id="mainWrapper">
     <header class="main-header">
       <div class="header-left">
-        <button class="header-menu-btn" id="headerMenuBtn" aria-label="MenÃº mÃ³vil">â˜°</button>
+        <button class="header-menu-btn" id="headerMenuBtn" aria-label="Men� m�vil">?</button>
         <h1 class="header-title">Gerencia Comercial</h1>
       </div>
       <div class="header-right">
@@ -50,18 +50,18 @@
         <div class="hero-brand">
           <img src="../../assets/images/Isotipo-TEXPRO_fondo_blanco.png" alt="Texpro" class="hero-logo" />
           <div>
-            <p class="eyebrow">MÃ³dulo Gerencia</p>
+            <p class="eyebrow">M�dulo Gerencia</p>
             <h2 id="page-title">Panel Comercial Ejecutivo</h2>
             <p class="hero-description">
-              VisualizaciÃ³n consolidada de ventas empresa, comparativo anual y desempeÃ±o por vendedor.
+              Visualizaci�n consolidada de ventas empresa, comparativo anual y desempe�o por vendedor.
             </p>
           </div>
         </div>
 
         <div class="hero-actions" aria-label="Filtros del panel">
           <label class="filter-control">
-            <span>AÃ±o base</span>
-            <select id="yearFilter" aria-label="Seleccionar aÃ±o base"></select>
+            <span>A�o base</span>
+            <select id="yearFilter" aria-label="Seleccionar a�o base"></select>
           </label>
           <label class="filter-control">
             <span>Vendedor</span>
@@ -74,12 +74,12 @@
         <article class="kpi-card primary">
           <span class="kpi-label">Ventas total empresa</span>
           <strong id="kpiTotalEmpresa">$0</strong>
-          <small id="kpiTotalHelp">AÃ±o seleccionado</small>
+          <small id="kpiTotalHelp">A�o seleccionado</small>
         </article>
         <article class="kpi-card">
-          <span class="kpi-label">VariaciÃ³n vs aÃ±o anterior</span>
+          <span class="kpi-label">Variaci�n vs a�o anterior</span>
           <strong id="kpiVariacion">0%</strong>
-          <small id="kpiVariacionHelp">ComparaciÃ³n acumulada anual</small>
+          <small id="kpiVariacionHelp">Comparaci�n acumulada anual</small>
         </article>
         <article class="kpi-card">
           <span class="kpi-label">Promedio mensual</span>
@@ -89,7 +89,7 @@
         <article class="kpi-card">
           <span class="kpi-label">Mejor vendedor</span>
           <strong id="kpiMejorVendedor">-</strong>
-          <small id="kpiMejorVendedorHelp">SegÃºn aÃ±o seleccionado</small>
+          <small id="kpiMejorVendedorHelp">Seg�n a�o seleccionado</small>
         </article>
       </section>
 
@@ -98,11 +98,11 @@
           <div class="panel-header">
             <div>
               <h2>Ventas empresa por mes</h2>
-              <p>ComparaciÃ³n mensual entre el aÃ±o base y el aÃ±o anterior.</p>
+              <p>Comparaci�n mensual entre el a�o base y el a�o anterior.</p>
             </div>
           </div>
           <div class="chart-box">
-            <canvas id="monthlySalesChart" aria-label="GrÃ¡fico comparativo de ventas mensuales" role="img"></canvas>
+            <canvas id="monthlySalesChart" aria-label="Gr�fico comparativo de ventas mensuales" role="img"></canvas>
           </div>
         </article>
 
@@ -110,11 +110,11 @@
           <div class="panel-header">
             <div>
               <h2>Comparativa anual</h2>
-              <p>Total comercial consolidado por aÃ±o.</p>
+              <p>Total comercial consolidado por a�o.</p>
             </div>
           </div>
           <div class="chart-box compact">
-            <canvas id="annualComparisonChart" aria-label="GrÃ¡fico de comparaciÃ³n anual" role="img"></canvas>
+            <canvas id="annualComparisonChart" aria-label="Gr�fico de comparaci�n anual" role="img"></canvas>
           </div>
         </article>
 
@@ -122,11 +122,11 @@
           <div class="panel-header">
             <div>
               <h2>Ranking por vendedor</h2>
-              <p>ParticipaciÃ³n comercial del aÃ±o seleccionado.</p>
+              <p>Participaci�n comercial del a�o seleccionado.</p>
             </div>
           </div>
           <div class="chart-box compact">
-            <canvas id="sellerRankingChart" aria-label="GrÃ¡fico de ventas por vendedor" role="img"></canvas>
+            <canvas id="sellerRankingChart" aria-label="Gr�fico de ventas por vendedor" role="img"></canvas>
           </div>
         </article>
       </section>
@@ -135,7 +135,7 @@
         <div class="panel-header">
           <div>
             <h2 id="seller-table-title">Detalle comercial por vendedor</h2>
-            <p>Ventas, participaciÃ³n y variaciÃ³n contra el aÃ±o anterior.</p>
+            <p>Ventas, participaci�n y variaci�n contra el a�o anterior.</p>
           </div>
         </div>
         <div class="table-wrapper">
@@ -143,10 +143,10 @@
             <thead>
               <tr>
                 <th>Vendedor</th>
-                <th>Ventas aÃ±o base</th>
-                <th>Ventas aÃ±o anterior</th>
-                <th>VariaciÃ³n</th>
-                <th>ParticipaciÃ³n</th>
+                <th>Ventas a�o base</th>
+                <th>Ventas a�o anterior</th>
+                <th>Variaci�n</th>
+                <th>Participaci�n</th>
               </tr>
             </thead>
             <tbody id="sellerTableBody"></tbody>

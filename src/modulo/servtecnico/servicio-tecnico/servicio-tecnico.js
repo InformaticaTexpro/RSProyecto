@@ -62,7 +62,7 @@
     { cliente:'SMAPA Maipú',               tipo:'Mantenimiento', tecnico:'Felipe Díaz', ruta:'Zona Sur',     fechaEstimada:`${_anio}-${_pad(_mes)}-28` },
     { cliente:'SISS Concepción',           tipo:'Visita',        tecnico:'Javier Rojas', ruta:'Zona Oriente', fechaEstimada:`${_anio}-${_pad(_mes)}-28` },
     { cliente:'Aguas Andinas S.A.',        tipo:'Mantenimiento', tecnico:'Marco Soto',   ruta:'Zona Centro',  fechaEstimada:`${_anio}-${_pad(_mes+1 > 12 ? 1 : _mes+1)}-02` },
-    { cliente:'Aqua Chile S.A.',           tipo:'Cambio',        tecnico:'Luis Pérez',    ruta:'Zona Norte',   fechaEstimada:`${_anio}-${_pad(_mes+1 > 12 ? 1 : _mes+1)}-03` },
+    { cliente:'Aqua Chile S.A.',           tipo:'Cambio',        tecnico:'Luis P�rez',    ruta:'Zona Norte',   fechaEstimada:`${_anio}-${_pad(_mes+1 > 12 ? 1 : _mes+1)}-03` },
   ];
 
   const TECH_ASSIGNMENTS = [
@@ -393,7 +393,7 @@
     if (!tbody) return;
 
     tbody.innerHTML = CLIENTES_MAQUINARIA.map(c => {
-      const alerta = c.estado === 'Mantenimiento' ? 'st-chip--naranja' : c.estado === 'En revisión' ? 'st-chip--rojo' : 'st-chip';
+      const alerta = c.estado === 'Mantenimiento' ? 'st-chip--naranja' : c.estado === 'En revisi�n' ? 'st-chip--rojo' : 'st-chip';
       return `
         <tr>
           <td><strong>${c.cliente}</strong></td>

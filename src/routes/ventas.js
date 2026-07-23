@@ -11,7 +11,7 @@
  * GET  /api/ventas/evolucion            — ventas mes a mes del año
  * GET  /api/ventas/meta                 — meta anual/mensual
  * GET  /api/ventas/clientes             — autocomplete de clientes (q=texto)
- * GET  /api/ventas/cliente-info         — info completa del cliente: ?codAux=
+ * GET  /api/ventas/cliente-info          info completa del cliente: ?codAux=
  * GET  /api/ventas/historial-cliente    — historial por cliente
  * GET  /api/ventas/folio/:folio         — monto de un folio
  * GET  /api/ventas/detalle/:folio       — detalle líneas de un folio
@@ -39,6 +39,10 @@ const {
 } = require('../models/venta');
 const { validarMesAnio } = require('../utils/stringHelpers');
 const {
+  obtenerMetaVendedor,
+  buildMetaDisplayInfo,
+} = require('../models/vendedorMeta');
+const {
   existeConfirmacion,
   crearConfirmacion,
   obtenerConfirmacionPorId,
@@ -48,11 +52,11 @@ const { generarPdfConfirmacion } = require('../utils/pdfConfirmacion');
 
 /** Códigos de vendedor asignados al usuario autenticado. */
 function getCodigos(req) {
-  return (req.usuario?.vendedores ?? []).map(v => v.cod_vendedor).filter(Boolean);
+  return (req.usuario?.vendedores ? []).map(v => v.cod_vendedor).filter(Boolean);
 }
 
 function getUsuarioId(req) {
-  return req.usuario?.id ?? req.usuario?.sub;
+  return req.usuario?.id ? req.usuario?.sub;
 }
 
 function buildInParams(request, valores, prefijo = 'cod') {
@@ -72,6 +76,28 @@ function buildCarteraExistsClause(codigosIn, aliasCliente = 'c') {
         AND av.VenCod IN (${codigosIn})
     )
   `;
+}
+
+function metaMensualEfectiva(meta) {
+  if (!meta) return 0;
+  const metaMensual = Number(meta.meta_mes ? meta.meta_mensual);
+  if (Number.isFinite(metaMensual) && metaMensual > 0) return metaMensual;
+
+  const raw = meta.meta;
+  const rawNumber = Number(raw);
+  if (Number.isFinite(rawNumber)) {
+    return rawNumber;
+  }
+
+  if (typeof raw === 'string') {
+    const compact = raw.trim().replace(/[\s.,]/g, '');
+    const parsed = Number(compact);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return 0;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -103,14 +129,11 @@ router.get('/kpis', requireAuth, async (req, res) => {
     catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
 
     const usuarioId = getUsuarioId(req);
-    const [metaRows] = await db.query(
-      `SELECT meta FROM vendedor_meta WHERE usuario_id = ? AND YEAR(fecha) = ? LIMIT 1`,
-      [usuarioId, anio]
-    );
-    const metaAnual = metaRows.length ? Number(metaRows[0].meta) : 0;
-    const metaMes   = metaAnual > 0 ? Math.round(metaAnual / 12) : 0;
+    const metaVigente = await obtenerMetaVendedor(usuarioId, anio, mes, db);
+    const metaInfo = buildMetaDisplayInfo(metaVigente);
+    const metaMes = metaMensualEfectiva(metaVigente);
 
-    if (!codigos.length) return res.json({ ok: true, totalVentas: 0, metaMes, totalDescuento: 0 });
+    if (!codigos.length) return res.json({ ok: true, totalVentas: 0, metaMes, metaInfo, totalDescuento: 0 });
 
     const precioListaRealCASE = await buildPrecioListaRealCASE(db, {
       campoFecha: 'enc.Fecha', campoCodProd: 'm.CodProd',
@@ -144,7 +167,7 @@ router.get('/kpis', requireAuth, async (req, res) => {
     const totalLista     = rows.reduce((a, r) => a + Number(r.totalVentasLista   || 0), 0);
     const totalDescuento = Math.round(totalLista - totalVentas);
 
-    res.json({ ok: true, totalVentas: Math.round(totalVentas), metaMes, totalDescuento });
+    res.json({ ok: true, totalVentas: Math.round(totalVentas), metaMes, metaInfo, totalDescuento });
   } catch (err) {
     console.error('[GET /api/ventas/kpis]', err.message);
     res.status(500).json({ ok: false, error: 'Error al obtener KPIs' });
@@ -171,16 +194,20 @@ router.get('/total', requireAuth, async (req, res) => {
 router.get('/meta', requireAuth, async (req, res) => {
   try {
     let anio;
-    try { ({ anio } = validarMesAnio(req.query.mes ?? '1', req.query.anio)); }
+    try { ({ anio } = validarMesAnio(req.query.mes ? '1', req.query.anio)); }
     catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
     const usuarioId = getUsuarioId(req);
-    const [rows] = await db.query(
-      `SELECT meta FROM vendedor_meta WHERE usuario_id = ? AND YEAR(fecha) = ? LIMIT 1`,
-      [usuarioId, anio]
-    );
-    const metaAnual = rows.length ? Number(rows[0].meta) : 0;
-    const metaMes   = metaAnual > 0 ? Math.round(metaAnual / 12) : 0;
-    res.json({ ok: true, metaAnual, metaMes });
+    const metaVigente = await obtenerMetaVendedor(usuarioId, anio, Number(req.query.mes ? 1), db);
+    const metaInfo = buildMetaDisplayInfo(metaVigente);
+    const metaMes = metaMensualEfectiva(metaVigente);
+    const metaRaw = metaVigente?.meta_original ? metaVigente?.meta;
+    const metaRawNumber = Number(metaRaw);
+    const metaAnual = metaVigente?.tipo_periodo === 'anual'
+      ? (Number.isFinite(metaRawNumber)
+        ? metaRawNumber
+        : (typeof metaRaw === 'string' ? Number(metaRaw.trim().replace(/[\s.,]/g, '')) || 0 : 0))
+      : 0;
+    res.json({ ok: true, metaAnual, metaMes, metaInfo });
   } catch (err) {
     console.error('[GET /api/ventas/meta]', err.message);
     res.status(500).json({ ok: false, error: 'Error al obtener meta' });
@@ -245,17 +272,13 @@ router.get('/resumen-vendedores', requireAuth, async (req, res) => {
 router.get('/evolucion', requireAuth, async (req, res) => {
   try {
     let anio;
-    try { ({ anio } = validarMesAnio(req.query.mes ?? '1', req.query.anio)); }
+    try { ({ anio } = validarMesAnio(req.query.mes ? '1', req.query.anio)); }
     catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
     const codigos   = getCodigos(req);
     const usuarioId = getUsuarioId(req);
 
-    const [metaRows] = await db.query(
-      `SELECT meta FROM vendedor_meta WHERE usuario_id = ? AND YEAR(fecha) = ? LIMIT 1`,
-      [usuarioId, anio]
-    );
-    const metaAnual = metaRows.length ? Number(metaRows[0].meta) : 0;
-    const metaMes   = metaAnual > 0 ? Math.round(metaAnual / 12) : 0;
+    const metaVigente = await obtenerMetaVendedor(usuarioId, anio, 1, db);
+    const metaMes = metaMensualEfectiva(metaVigente);
 
     if (!codigos.length) {
       return res.json({ ok: true, evolucion: Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, ventas: 0, meta: metaMes })) });
@@ -464,7 +487,7 @@ router.get('/detalle/:folio', requireAuth, async (req, res) => {
     const anio    = req.query.anio;
     const detalle = await getDetalleFolio({ folio, anio });
     const primera = Array.isArray(detalle) ? detalle[0] || {} : {};
-    const tipoFolio = String(primera.tipo_folio ?? primera.Tipo ?? primera.tipo ?? '').trim().toUpperCase();
+    const tipoFolio = String(primera.tipo_folio ? primera.Tipo ? primera.tipo ? '').trim().toUpperCase();
     res.json({
       ok: true,
       detalle,
@@ -611,12 +634,8 @@ router.post('/confirmar', requireAuth, async (req, res) => {
     const totalAsignadas   = fcRows.reduce((a, f) => a + Number(f.monto_asignado || 0), 0);
 
     // 4. Meta mensual
-    const [metaRows] = await db.query(
-      `SELECT meta FROM vendedor_meta WHERE usuario_id = ? AND YEAR(fecha) = ? LIMIT 1`,
-      [usuarioId, anio]
-    );
-    const metaAnual = metaRows.length ? Number(metaRows[0].meta) : 0;
-    const meta      = metaAnual > 0 ? Math.round(metaAnual / 12) : 0;
+    const metaVigente = await obtenerMetaVendedor(usuarioId, anio, mes, db);
+    const meta      = metaMensualEfectiva(metaVigente);
 
     // 5. Generar PDF
     const { rutaPdf, nombreArchivo } = await generarPdfConfirmacion({

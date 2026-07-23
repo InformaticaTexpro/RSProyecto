@@ -25,7 +25,7 @@ async function findByEmail(email) {
     'SELECT * FROM usuario WHERE email = ? LIMIT 1',
     [email]
   );
-  return rows[0] ?? null;
+  return rows[0] ? null;
 }
 
 async function findById(id) {
@@ -34,7 +34,7 @@ async function findById(id) {
     'SELECT id, nombre, email, area, codigo, tema, is_active, is_admin, last_login, fecha_creacion FROM usuario WHERE id = ? LIMIT 1',
     [id]
   );
-  return rows[0] ?? null;
+  return rows[0] ? null;
 }
 
 async function updateLastLogin(id) {
@@ -73,7 +73,10 @@ async function getPermisosByUsuarioId(usuarioId) {
 
 async function getMetasByUsuarioId(usuarioId) {
   const [rows] = await pool.execute(
-    'SELECT * FROM vendedor_meta WHERE usuario_id = ? ORDER BY fecha DESC',
+    `SELECT id, usuario_id, fecha, meta, tipo_periodo, activo, observacion
+     FROM vendedor_meta
+     WHERE usuario_id = ?
+     ORDER BY fecha DESC, CASE WHEN tipo_periodo = 'mensual' THEN 0 ELSE 1 END, id DESC`,
     [usuarioId]
   );
   return rows;

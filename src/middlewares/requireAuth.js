@@ -22,7 +22,7 @@ async function requireAuth(req, res, next) {
     }
 
     const payload = verificarToken(token);
-    const usuarioId = payload.sub ?? payload.id;
+    const usuarioId = payload.sub ? payload.id;
     if (!usuarioId) {
       return res.status(401).json({ ok: false, error: 'Token inválido.' });
     }

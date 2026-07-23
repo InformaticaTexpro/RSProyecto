@@ -23,8 +23,8 @@
       detalle: data.detalle.map(row => ({
         ...row,
         CodAux: row.CodAux || row.cod_cliente || row.codAux || '',
-        precio_lista_real: row.precio_lista_real ?? row.precio_lista_actual ?? row.precio_historico_base ?? row.PrecioVta,
-        valor_historico_linea: row.valor_historico_linea ?? Math.round(Number(row.precio_lista_real || 0) * Number(row.CantFacturada || 0)),
+        precio_lista_real: row.precio_lista_real ? row.precio_lista_actual ? row.precio_historico_base ? row.PrecioVta,
+        valor_historico_linea: row.valor_historico_linea ? Math.round(Number(row.precio_lista_real || 0) * Number(row.CantFacturada || 0)),
       })),
     };
   }

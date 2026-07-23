@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Texpro — Alertas y Recordatorios</title>
+  <title>Texpro � Alertas y Recordatorios</title>
   <link rel="icon" type="image/jpg" href="../../../assets/images/Isotipo-TEXPRO_fondo_blanco.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,7 @@
     <div class="sidebar-header">
       <img src="../../../assets/images/Isotipo-TEXPRO_fondo_blanco.png" alt="Texpro" class="sidebar-logo" onerror="this.style.display='none'" />
       <span class="sidebar-brand">TEXPRO</span>
-      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar menú">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar men�">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
     </div>
@@ -30,9 +30,9 @@
           <span class="user-area" id="userArea"></span>
         </div>
       </div>
-      <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
+      <button class="btn-logout" id="btnLogout" title="Cerrar sesi�n">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-        <span class="btn-logout-text">Cerrar sesión</span>
+        <span class="btn-logout-text">Cerrar sesi�n</span>
       </button>
     </div>
   </aside>
@@ -40,7 +40,7 @@
   <div class="main-wrapper" id="mainWrapper">
     <header class="main-header">
       <div class="header-left">
-        <button class="header-menu-btn" id="headerMenuBtn" aria-label="Menú móvil">
+        <button class="header-menu-btn" id="headerMenuBtn" aria-label="Men� m�vil">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
         </button>
         <h1 class="header-title">Alertas y Recordatorios</h1>
@@ -59,7 +59,7 @@
       <!-- BARRA SUPERIOR -->
       <div class="alertas-topbar">
         <div class="alertas-topbar-left">
-          <h2 class="alertas-page-titulo">🔔 Mis Alertas</h2>
+          <h2 class="alertas-page-titulo">?? Mis Alertas</h2>
           <span class="alertas-page-sub">Gestiona tus recordatorios personales y grupales</span>
         </div>
         <button class="btn-nueva-alerta" id="btnNuevaAlerta">
@@ -73,11 +73,11 @@
         <button class="filtro-btn filtro-btn--active" data-filtro="todas">Todas</button>
         <button class="filtro-btn" data-filtro="activas">Activas</button>
         <button class="filtro-btn" data-filtro="archivadas">Archivadas</button>
-        <button class="filtro-btn" data-filtro="proximas">⚠️ Próximas a vencer</button>
-        <button class="filtro-btn" data-filtro="completadas">✅ Completadas</button>
-        <button class="filtro-btn" data-filtro="grupales">👥 Grupales</button>
-        <button class="filtro-btn" data-filtro="propias">🔒 Propias</button>
-        <button class="filtro-btn" data-filtro="asignadas">📌 Asignadas a mí</button>
+        <button class="filtro-btn" data-filtro="proximas">?? Pr�ximas a vencer</button>
+        <button class="filtro-btn" data-filtro="completadas">? Completadas</button>
+        <button class="filtro-btn" data-filtro="grupales">?? Grupales</button>
+        <button class="filtro-btn" data-filtro="propias">?? Propias</button>
+        <button class="filtro-btn" data-filtro="asignadas">?? Asignadas a m�</button>
       </div>
 
       <!-- GRID DE ALERTAS -->
@@ -91,7 +91,7 @@
     </main>
   </div>
 
-  <!-- ══ MODAL CREAR / EDITAR ALERTA ══════════════════════════════ -->
+  <!-- ?? MODAL CREAR / EDITAR ALERTA ?????????????????????????????? -->
   <div class="alerta-modal-overlay" id="modalAlertaOverlay" aria-hidden="true">
     <div class="alerta-modal">
       <div class="alerta-modal-header">
@@ -104,12 +104,12 @@
         <input type="hidden" id="editandoId" value="" />
 
         <div class="form-group">
-          <label class="form-label" for="fTitulo">Título <span class="req">*</span></label>
+          <label class="form-label" for="fTitulo">T�tulo <span class="req">*</span></label>
           <input class="form-input" type="text" id="fTitulo" maxlength="160" placeholder="Ej: Renovar contrato proveedor X" required />
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="fDescripcion">Descripción</label>
+          <label class="form-label" for="fDescripcion">Descripci�n</label>
           <textarea class="form-input form-textarea" id="fDescripcion" rows="3" placeholder="Detalle opcional de la tarea o recordatorio..."></textarea>
         </div>
 
@@ -122,26 +122,26 @@
             </select>
           </div>
           <div class="form-group">
-            <label class="form-label" for="fFechaVence">Fecha límite <span class="req">*</span></label>
+            <label class="form-label" for="fFechaVence">Fecha l�mite <span class="req">*</span></label>
             <input class="form-input" type="date" id="fFechaVence" required />
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="fFrecuencia">🔔 Frecuencia de recordatorio
-            <span class="form-hint">(¿Cada cuánto mostrar el aviso?)</span>
+          <label class="form-label" for="fFrecuencia">?? Frecuencia de recordatorio
+            <span class="form-hint">(�Cada cu�nto mostrar el aviso?)</span>
           </label>
           <select class="form-input" id="fFrecuencia">
-            <option value="siempre">Siempre — recordar cada vez que ingreso</option>
-            <option value="diaria">Diaria — recordar una vez al día</option>
-            <option value="semanal" selected>Semanal — recordar cada 7 días</option>
-            <option value="quincenal">Quincenal — recordar cada 15 días</option>
+            <option value="siempre">Siempre � recordar cada vez que ingreso</option>
+            <option value="diaria">Diaria � recordar una vez al d�a</option>
+            <option value="semanal" selected>Semanal � recordar cada 7 d�as</option>
+            <option value="quincenal">Quincenal � recordar cada 15 d�as</option>
           </select>
-          <span class="form-hint-inline">⚠️ El sistema siempre avisará automáticamente 7 días antes del vencimiento</span>
+          <span class="form-hint-inline">?? El sistema siempre avisar� autom�ticamente 7 d�as antes del vencimiento</span>
         </div>
 
         <div class="form-group" id="seccionDestinatarios" style="display:none">
-          <label class="form-label">Compartir con <span class="form-hint">(selecciona uno o más usuarios)</span></label>
+          <label class="form-label">Compartir con <span class="form-hint">(selecciona uno o m�s usuarios)</span></label>
           <div class="dest-lista" id="listaDestinatarios">
             <span class="dest-loading">Cargando usuarios...</span>
           </div>
@@ -155,11 +155,11 @@
     </div>
   </div>
 
-  <!-- ══ POPUP DE RECORDATORIO EN LOGIN ═══════════════════════════════ -->
+  <!-- ?? POPUP DE RECORDATORIO EN LOGIN ??????????????????????????????? -->
   <div class="recordatorio-overlay" id="recordatorioOverlay" aria-hidden="true">
     <div class="recordatorio-panel">
       <div class="recordatorio-header">
-        <span class="recordatorio-icono">🔔</span>
+        <span class="recordatorio-icono">??</span>
         <div>
           <h3 class="recordatorio-titulo">Recordatorios pendientes</h3>
           <p class="recordatorio-sub">Tienes alertas que vencen pronto</p>

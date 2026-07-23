@@ -41,11 +41,11 @@ function filasPropias(ventas) {
   }
   return ventas.map(v => `
     <tr>
-      <td>${v.Folio ?? ''}</td>
-      <td>${v.cod_cliente ?? v.CodAux ?? '—'}</td>
-      <td>${v.NomAux ?? v.cliente ?? ''}</td>
-      <td>${v.Fecha ? new Date(v.Fecha).toLocaleDateString('es-CL') : (v.fecha_formato ?? '')}</td>
-      <td style="text-align:right">${fmtCLP(v.TotLinea ?? v.monto ?? v.monto_neto)}</td>
+      <td>${v.Folio ? ''}</td>
+      <td>${v.cod_cliente ? v.CodAux ? ''}</td>
+      <td>${v.NomAux ? v.cliente ? ''}</td>
+      <td>${v.Fecha ? new Date(v.Fecha).toLocaleDateString('es-CL') : (v.fecha_formato ? '')}</td>
+      <td style="text-align:right">${fmtCLP(v.TotLinea ? v.monto ? v.monto_neto)}</td>
       <td style="text-align:center">${v.pctDescuento != null ? v.pctDescuento + '%' : '-'}</td>
     </tr>`).join('');
 }
@@ -59,12 +59,12 @@ function filasAsignadas(facturas) {
   }
   return facturas.map(f => `
     <tr>
-      <td>${f.folio ?? ''}</td>
-      <td>${f.cod_cliente ?? f.CodAux ?? '—'}</td>
-      <td>${f.cliente ?? ''}</td>
+      <td>${f.folio ? ''}</td>
+      <td>${f.cod_cliente ? f.CodAux ? ''}</td>
+      <td>${f.cliente ? ''}</td>
       <td>${f.fecha ? new Date(f.fecha).toLocaleDateString('es-CL') : ''}</td>
       <td style="text-align:right">${fmtCLP(f.monto_asignado)}</td>
-      <td style="text-align:center">${f.porcentaje ?? 50}%</td>
+      <td style="text-align:center">${f.porcentaje ? 50}%</td>
     </tr>`).join('');
 }
 
@@ -222,7 +222,7 @@ function generarHTML({ usuario, mes, anio, ventasPropias, ventasAsignadas, meta,
     </div>
     <div>
       <div class="label">Email</div>
-      <div class="value">${usuario.email ?? '-'}</div>
+      <div class="value">${usuario.email ? '-'}</div>
     </div>
     <div>
       <div class="label">ID Usuario</div>

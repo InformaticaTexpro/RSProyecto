@@ -57,7 +57,7 @@
   function normalizarMenus(menus) {
     return (menus || [])
       .map(menu => ({
-        id: menu?.id ?? null,
+        id: menu?.id ? null,
         url: normalizarRuta(menu?.url),
       }))
       .filter(menu => menu.id !== null && menu.url);

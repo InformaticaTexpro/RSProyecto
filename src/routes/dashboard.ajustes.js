@@ -21,6 +21,7 @@ const { getSoftlandPool } = require('../config/db.softland');
 const { requireAuth } = require('../middlewares/requireAuth');
 const { validarMesAnio } = require('../utils/stringHelpers');
 const { getFactorHistorico } = require('../utils/precioHistorico');
+const { obtenerMetaVendedor, buildMetaDisplayInfo } = require('../models/vendedorMeta');
 
 router.use(requireAuth);
 
@@ -40,11 +41,31 @@ function uniqueNums(arr) {
   return [...new Set(arr.map(Number).filter(Number.isFinite))];
 }
 
+function parseMetaValue(value) {
+  if (value === undefined || value === null || value === '') return 0;
+  const parsed = Number(value);
+  if (Number.isFinite(parsed)) return parsed;
+  if (typeof value === 'string') {
+    const compact = value.trim().replace(/[\s.,]/g, '');
+    const parsedCompact = Number(compact);
+    if (Number.isFinite(parsedCompact)) return parsedCompact;
+  }
+  return 0;
+}
+
+function metaMensualEfectiva(meta) {
+  if (!meta) return 0;
+  const metaMensual = parseMetaValue(meta.meta_mes ? meta.meta_mensual);
+  if (Number.isFinite(metaMensual) && metaMensual > 0) return metaMensual;
+  const base = parseMetaValue(meta.meta);
+  return base;
+}
+
 function periodoDesdeReq(req) {
   const hoy = new Date();
   return validarMesAnio(
-    req.query.mes ?? (hoy.getMonth() + 1),
-    req.query.anio ?? hoy.getFullYear()
+    req.query.mes ? (hoy.getMonth() + 1),
+    req.query.anio ? hoy.getFullYear()
   );
 }
 
@@ -176,14 +197,12 @@ router.get('/resumen', async (req, res) => {
   catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
 
   try {
-    const [metaRows] = await db.pool.query(
-      `SELECT meta FROM vendedor_meta WHERE usuario_id = ? AND YEAR(fecha) = ? LIMIT 1`,
-      [req.usuario.sub, anio]
-    );
-    const metaMes = metaRows.length ? Number(metaRows[0].meta) : 0;
+    const metaVigente = await obtenerMetaVendedor(req.usuario.sub, anio, mes, db.pool);
+    const metaInfo = buildMetaDisplayInfo(metaVigente);
+    const metaMes = metaMensualEfectiva(metaVigente);
 
     if (!codigos.length) {
-      return res.json({ ok: true, totalVentas: 0, meta: metaMes, progreso: 0, pctDescuentoGlobal: 0 });
+      return res.json({ ok: true, totalVentas: 0, meta: metaMes, metaInfo, progreso: 0, pctDescuentoGlobal: 0 });
     }
 
     const compartidos = await getCompartidosPeriodo(codigos, mes, anio);
@@ -234,7 +253,7 @@ router.get('/resumen', async (req, res) => {
       : 0;
     const progreso = metaMes > 0 ? Math.min(Math.round((totalVentas / metaMes) * 100), 999) : 0;
 
-    res.json({ ok: true, totalVentas: Math.round(totalVentas), meta: metaMes, progreso, pctDescuentoGlobal });
+    res.json({ ok: true, totalVentas: Math.round(totalVentas), meta: metaMes, metaInfo, progreso, pctDescuentoGlobal });
   } catch (err) {
     console.error('[GET /api/dashboard/resumen ajuste]', err.message);
     res.status(500).json({ ok: false, error: 'Error al obtener resumen ajustado' });
@@ -245,18 +264,16 @@ router.get('/evolucion', async (req, res) => {
   const codigos = getCodigos(req.usuario);
   const hoy = new Date();
   let anio;
-  try { ({ anio } = validarMesAnio(1, req.query.anio ?? hoy.getFullYear())); }
+  try { ({ anio } = validarMesAnio(1, req.query.anio ? hoy.getFullYear())); }
   catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
 
   try {
-    const [metaRows] = await db.pool.query(
-      `SELECT meta FROM vendedor_meta WHERE usuario_id = ? AND YEAR(fecha) = ? LIMIT 1`,
-      [req.usuario.sub, anio]
-    );
-    const metaMes = metaRows.length ? Number(metaRows[0].meta) : 0;
+    const metaVigente = await obtenerMetaVendedor(req.usuario.sub, anio, 1, db.pool);
+    const metaInfo = buildMetaDisplayInfo(metaVigente);
+    const metaMes = metaMensualEfectiva(metaVigente);
 
     if (!codigos.length) {
-      return res.json({ ok: true, evolucion: Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, ventas: 0, meta: metaMes })) });
+      return res.json({ ok: true, metaInfo, evolucion: Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, ventas: 0, meta: metaMes })) });
     }
 
     const compartidos = await getCompartidosAnio(codigos, anio);
@@ -293,6 +310,7 @@ router.get('/evolucion', async (req, res) => {
 
     res.json({
       ok: true,
+      metaInfo,
       evolucion: Array.from({ length: 12 }, (_, i) => ({
         mes: i + 1,
         ventas: Math.round(ventasPorMes[i + 1] || 0),
