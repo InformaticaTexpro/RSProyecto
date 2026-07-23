@@ -46,7 +46,7 @@ const config = {
     trustServerCertificate: (function () {
       // Prioridad: SOFTLAND_DB_TRUST_SERVER_CERT > SOFTLAND_DB_TRUST_CERT > default
       const envVal =
-        process.env.SOFTLAND_DB_TRUST_SERVER_CERT ??
+        process.env.SOFTLAND_DB_TRUST_SERVER_CERT ?
         process.env.SOFTLAND_DB_TRUST_CERT;
 
       if (typeof envVal !== 'undefined') {

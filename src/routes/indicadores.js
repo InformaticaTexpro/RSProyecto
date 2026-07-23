@@ -93,7 +93,7 @@ async function fetchFindic(indicador) {
   if (ult?.valor == null || Number.isNaN(Number(ult.valor))) throw new Error(`Valor null: ${indicador}`);
   return {
     valor: Number(ult.valor),
-    fecha: String(ult.fecha ?? '').substring(0, 10),
+    fecha: String(ult.fecha ? '').substring(0, 10),
   };
 }
 

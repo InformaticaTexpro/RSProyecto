@@ -361,7 +361,7 @@
         return {
           factura: f.numero,
           cliente: f.cliente,
-          ruta: pionetaData ? pionetaData.ruta : '—',
+          ruta: pionetaData ? pionetaData.ruta : '',
           fecha: f.fecha,
           estado: f.estado,
           origen: 'Facturación',
@@ -602,7 +602,7 @@
       const alerta     = disponible <= p.minimo;
       const pct        = Math.min(Math.round((disponible / p.stockFisico) * 100), 100);
       const alertaBadge= alerta ? 'badge--rojo' : disponible <= p.minimo * 1.5 ? 'badge--naranja' : 'badge--verde';
-      const alertaTxt  = alerta ? '⚠ Bajo mínimo' : 'OK';
+      const alertaTxt  = alerta ? '� Bajo m�nimo' : 'OK';
 
       return `
         <tr${alerta ? ' style="background:rgba(239,68,68,0.03)"' : ''}>
@@ -637,7 +637,7 @@
         <tr>
           <td><strong>${nv.numero}</strong></td>
           <td>${nv.cliente}</td>
-          <td style="text-align:center">${nv.items} ítem${nv.items !== 1 ? 's' : ''}</td>
+          <td style="text-align:center">${nv.items} �tem${nv.items !== 1 ? 's' : ''}</td>
           <td style="text-align:right">${formatMoney(nv.monto)}</td>
           <td>${formatFecha(nv.fecha)}</td>
           <td style="text-align:center"><span class="badge ${badge}">${nv.estado}</span></td>
@@ -680,7 +680,7 @@
     const cabecera = ['Número','Cliente','Monto','Fecha','Pioneta','Estado'];
     const filas    = datos.map(f =>
       [f.numero, f.cliente, f.monto, f.fecha, f.pioneta, f.estado]
-        .map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','));
+        .map(c => `"${String(c ? '').replace(/"/g, '""')}"`).join(','));
 
     const csv  = [cabecera.join(','), ...filas].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type:'text/csv;charset=utf-8;' });

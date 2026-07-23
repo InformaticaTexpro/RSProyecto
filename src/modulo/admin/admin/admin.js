@@ -6,12 +6,12 @@
 
   const MENU_GROUP_ORDER = [
     'Ventas',
-    'Producción',
+    'Producci�n',
     'Bodega',
-    'Servicio Técnico',
-    'Facturación',
+    'Servicio T�cnico',
+    'Facturaci�n',
     'Contabilidad',
-    'Administración',
+    'Administraci�n',
     'Gerencia',
     'General',
   ];
@@ -35,6 +35,14 @@
     selectedProfileId: null,
     selectedProfileUserId: null,
     selectedVendorUserId: null,
+    selectedMetaId: null,
+    selectedMetaUserId: null,
+    selectedMetaPeriodo: 'mensual',
+    selectedMetaAnio: new Date().getFullYear(),
+    selectedMetaMes: new Date().getMonth() + 1,
+    selectedMetaValor: '',
+    selectedMetaObservacion: '',
+    metas: [],
     selectedAreaId: null,
     selectedAreaProfileId: null,
     permissionsDraft: new Set(),
@@ -74,7 +82,7 @@
   }
 
   function normalizeText(value) {
-    return String(value ?? '').trim();
+    return String(value ? '').trim();
   }
 
   function normalizeKey(value) {
@@ -123,15 +131,15 @@
 
   function friendlyAdminError(error) {
     const code = String(error?.code || '').toUpperCase();
-    const fallback = String(error?.message || 'Ocurrió un error al guardar.').trim();
+    const fallback = String(error?.message || 'Ocurri���� un error al guardar.').trim();
     const messages = {
       EMAIL_DUPLICADO: 'Ya existe un usuario registrado con este correo.',
-      CODIGO_DUPLICADO: 'Este código ya está asociado a otro usuario.',
-      MENU_DUPLICADO: 'Ya existe un menú con este código.',
-      PERFIL_DUPLICADO: 'Ya existe un perfil con este código.',
+      CODIGO_DUPLICADO: 'Este c�digo ya est� asociado a otro usuario.',
+      MENU_DUPLICADO: 'Ya existe un men� con este c�digo.',
+      PERFIL_DUPLICADO: 'Ya existe un perfil con este c�digo.',
       USUARIO_NO_EXISTE: 'El usuario seleccionado no existe.',
       PERFIL_NO_EXISTE: 'El perfil seleccionado no existe.',
-      MENU_NO_EXISTE: 'El menú seleccionado no existe.',
+      MENU_NO_EXISTE: 'El men� seleccionado no existe.',
     };
     return messages[code] || fallback;
   }
@@ -139,7 +147,7 @@
   function handleAdminError(error) {
     const message = friendlyAdminError(error);
     setMessage(message, 'error');
-    toast('Administración', message, 'error');
+    toast('Administraci�n', message, 'error');
   }
 
   function escHtml(value) {
@@ -157,7 +165,7 @@
     if (typeof value === 'boolean') return value;
     if (typeof value === 'number') return value !== 0;
     const normalized = normalizeKey(value);
-    return ['1', 'true', 'si', 'sí', 'yes', 'on'].includes(normalized)
+    return ['1', 'true', 'si', 's�', 'yes', 'on'].includes(normalized)
       ? true
       : ['0', 'false', 'no', 'off'].includes(normalized)
         ? false
@@ -168,17 +176,17 @@
     const key = normalizeKey(value);
     const labels = {
       ventas: 'Ventas',
-      produccion: 'Producción',
+      produccion: 'Producci�n',
       bodega: 'Bodega',
-      'servicio-tecnico': 'Servicio Técnico',
-      facturacion: 'Facturación',
+      'servicio-tecnico': 'Servicio T�cnico',
+      facturacion: 'Facturaci�n',
       contabilidad: 'Contabilidad',
       rrhh: 'RRHH',
       gerencia: 'Gerencia',
-      administracion: 'Administración',
-      admin: 'Administración',
+      administracion: 'Administraci�n',
+      admin: 'Administraci�n',
     };
-    return labels[key] || normalizeText(value) || 'Sin área';
+    return labels[key] || normalizeText(value) || 'Sin �rea';
   }
 
   function buildSuggestions(areaCode) {
@@ -303,7 +311,7 @@
     const inherited = inheritedMenuCodes(user);
     const direct = currentUserMenuCodes(user);
     if (inherited.has(normalizeKey(menuCode)) && direct.has(normalizeKey(menuCode))) {
-      return '<small class="field-warning">Este menú ya viene por perfil. No es necesario asignarlo como excepción.</small>';
+      return '<small class="field-warning">Este men� ya viene por perfil. No es necesario asignarlo como excepci�n.</small>';
     }
     if (inherited.has(normalizeKey(menuCode))) {
       return '<small class="field-valid-message">Heredado desde perfil.</small>';
@@ -342,7 +350,7 @@
       const currentId = state.drawer.mode === 'edit' ? state.drawer.id : null;
 
       mark('adminUserNombre', !!nombre, 'Este campo es obligatorio.');
-      mark('adminUserEmail', !!email && isValidEmail(email), 'Ingresa un correo válido.');
+      mark('adminUserEmail', !!email && isValidEmail(email), 'Ingresa un correo v�lido.');
       mark('adminUserCodigo', !!codigo, 'Este campo es obligatorio.');
       mark('adminUserArea', !!area, 'Este campo es obligatorio.');
       validateDrawerField('adminUserIsAdmin', '', '');
@@ -350,13 +358,13 @@
 
       if (email && isValidEmail(email)) {
         const duplicated = uniqueCodeExists(state.users.map(user => ({ id: user.id, codigo: user.email })), email, currentId);
-        validateDrawerField('adminUserEmail', duplicated ? 'invalid' : 'valid', duplicated ? 'Este correo ya existe.' : 'Correo válido');
+        validateDrawerField('adminUserEmail', duplicated ? 'invalid' : 'valid', duplicated ? 'Este correo ya existe.' : 'Correo v����lido');
         result.valid = result.valid && !duplicated;
       }
 
       if (codigo) {
         const duplicated = uniqueCodeExists(state.users, codigo, currentId);
-        validateDrawerField('adminUserCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este código ya existe.' : 'Código disponible');
+        validateDrawerField('adminUserCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este c����digo ya existe.' : 'C����digo disponible');
         result.valid = result.valid && !duplicated;
       }
 
@@ -377,25 +385,25 @@
 
       if (codigo) {
         const duplicated = uniqueCodeExists(state.menus, codigo, currentId);
-        validateDrawerField('adminMenuCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este código ya existe.' : 'Código disponible');
+        validateDrawerField('adminMenuCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este c����digo ya existe.' : 'C����digo disponible');
         result.valid = result.valid && !duplicated;
       }
 
       if (url) {
         const validUrl = isValidMenuUrl(url);
-        validateDrawerField('adminMenuUrl', validUrl ? 'valid' : 'invalid', validUrl ? 'La URL parece válida.' : 'La URL debe comenzar con / y apuntar a un archivo index.html del módulo.');
+        validateDrawerField('adminMenuUrl', validUrl ? 'valid' : 'invalid', validUrl ? 'La URL parece v����lida.' : 'La URL debe comenzar con / y apuntar a un archivo index.html del m����dulo.');
         result.valid = result.valid && validUrl;
       }
 
       if (orden && Number.isNaN(Number(orden))) {
-        validateDrawerField('adminMenuOrden', 'invalid', 'El orden debe ser numérico.');
+        validateDrawerField('adminMenuOrden', 'invalid', 'El orden debe ser num�rico.');
         result.valid = false;
       } else if (orden) {
-        validateDrawerField('adminMenuOrden', 'valid', 'Orden válido');
+        validateDrawerField('adminMenuOrden', 'valid', 'Orden v�lido');
       }
 
       if (grupo) {
-        validateDrawerField('adminMenuGrupo', 'valid', 'Grupo válido');
+        validateDrawerField('adminMenuGrupo', 'valid', 'Grupo v�lido');
       }
 
       return result;
@@ -412,15 +420,15 @@
 
       if (codigo) {
         const duplicated = uniqueCodeExists(state.profiles, codigo, currentId);
-        validateDrawerField('adminProfileCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este código ya existe.' : 'Código disponible');
+        validateDrawerField('adminProfileCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este c����digo ya existe.' : 'C����digo disponible');
         result.valid = result.valid && !duplicated;
       }
 
       if (!area) {
-        validateDrawerField('adminProfileArea', 'warning', 'Área opcional. Puede quedar sin área asociada.');
-        result.warnings.push('Área no asociada');
+        validateDrawerField('adminProfileArea', 'warning', '�??rea opcional. Puede quedar sin �rea asociada.');
+        result.warnings.push('�??rea no asociada');
       } else {
-        validateDrawerField('adminProfileArea', 'valid', 'Área válida');
+        validateDrawerField('adminProfileArea', 'valid', '�??rea v�lida');
       }
 
       return result;
@@ -436,17 +444,17 @@
 
       if (codigo) {
         const duplicated = uniqueCodeExists(state.areas, codigo, state.drawer.mode === 'edit' ? state.drawer.id : null);
-        validateDrawerField('adminAreaCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este código ya existe.' : 'Código disponible');
+        validateDrawerField('adminAreaCodigo', duplicated ? 'invalid' : 'valid', duplicated ? 'Este c����digo ya existe.' : 'C����digo disponible');
         result.valid = result.valid && !duplicated;
       }
 
       if (perfilBaseId) {
         const profile = profileById(perfilBaseId);
-        validateDrawerField('adminAreaPerfilBase', profile ? 'valid' : 'warning', profile ? 'Perfil base válido.' : 'Selecciona un perfil base existente.');
+        validateDrawerField('adminAreaPerfilBase', profile ? 'valid' : 'warning', profile ? 'Perfil base v����lido.' : 'Selecciona un perfil base existente.');
         if (!profile) result.warnings.push('Perfil base no encontrado');
       } else {
-        validateDrawerField('adminAreaPerfilBase', 'warning', 'Área sin perfil base asociado.');
-        result.warnings.push('Área sin perfil base');
+        validateDrawerField('adminAreaPerfilBase', 'warning', '�??rea sin perfil base asociado.');
+        result.warnings.push('�??rea sin perfil base');
       }
 
       return result;
@@ -566,7 +574,7 @@
       ...activeProfiles().map(profile => {
         const area = areaLabel(profile.area);
         const selected = normalizeKey(profile.codigo) === selectedKey ? 'selected' : '';
-        return `<option value="${escHtml(profile.codigo)}" ${selected}>${escHtml(profile.nombre)}${area ? ` · ${escHtml(area)}` : ''}</option>`;
+        return `<option value="${escHtml(profile.codigo)}" ${selected}>${escHtml(profile.nombre)}${area ? ` ��a�� ${escHtml(area)}` : ''}</option>`;
       }),
     ].join('');
   }
@@ -578,7 +586,7 @@
       ...activeProfiles().map(profile => {
         const area = areaLabel(profile.area);
         const selected = Number(profile.id) === selectedKey ? 'selected' : '';
-        return `<option value="${escHtml(profile.id)}" ${selected}>${escHtml(profile.nombre)}${area ? ` · ${escHtml(area)}` : ''}</option>`;
+        return `<option value="${escHtml(profile.id)}" ${selected}>${escHtml(profile.nombre)}${area ? ` ��a�� ${escHtml(area)}` : ''}</option>`;
       }),
     ].join('');
   }
@@ -598,9 +606,9 @@
   }
 
   function formatLastUpdated(value) {
-    if (!value) return 'Sin datos aún';
+    if (!value) return 'Sin datos a�n';
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return 'Sin datos aún';
+    if (Number.isNaN(date.getTime())) return 'Sin datos a�n';
     return date.toLocaleString('es-CL', {
       day: '2-digit',
       month: 'short',
@@ -646,10 +654,10 @@
 
     if (warningsList) {
       const warnings = [];
-      if (!metrics.totalUsers) warnings.push('No hay usuarios cargados todavía.');
-      if (!metrics.activeMenus) warnings.push('No existen menús activos para heredar.');
-      if (!metrics.baseProfiles) warnings.push('Aún no hay perfiles base marcados.');
-      if (!warnings.length) warnings.push('Todo está listo: no hay alertas destacadas.');
+      if (!metrics.totalUsers) warnings.push('No hay usuarios cargados todav�a.');
+      if (!metrics.activeMenus) warnings.push('No existen men�s activos para heredar.');
+      if (!metrics.baseProfiles) warnings.push('A�n no hay perfiles base marcados.');
+      if (!warnings.length) warnings.push('Todo est� listo: no hay alertas destacadas.');
       warningsList.innerHTML = warnings.map(text => `<div class="summary-item summary-item--warn">${escHtml(text)}</div>`).join('');
     }
 
@@ -715,8 +723,8 @@
       { label: 'Usuarios activos', value: metrics.activeUsers, hint: 'Con is_active = 1' },
       { label: 'Usuarios inactivos', value: metrics.inactiveUsers, hint: 'Con is_active = 0' },
       { label: 'Administradores', value: metrics.adminUsers, hint: 'Con is_admin = 1' },
-      { label: 'Menús activos', value: metrics.activeMenus, hint: 'Desde /api/admin/menus' },
-      { label: 'Usuarios sin menús', value: metrics.usersWithoutMenus, hint: 'Pendientes de acceso' },
+      { label: 'Men�s activos', value: metrics.activeMenus, hint: 'Desde /api/admin/menus' },
+      { label: 'Usuarios sin men�s', value: metrics.usersWithoutMenus, hint: 'Pendientes de acceso' },
     ];
 
     container.innerHTML = cards.map(card => `
@@ -734,10 +742,10 @@
         { label: 'Activos', value: metrics.activeUsers, hint: 'Usuarios habilitados' },
         { label: 'Inactivos', value: metrics.inactiveUsers, hint: 'Usuarios deshabilitados' },
         { label: 'Perfiles', value: state.profiles.length, hint: 'Perfiles configurados' },
-        { label: 'Áreas', value: metrics.totalAreas, hint: 'Catálogo maestro' },
-        { label: 'Perfiles base', value: metrics.baseProfiles, hint: 'Heredados por área' },
-        { label: 'Menús', value: state.menus.length, hint: 'Catálogo total disponible' },
-        { label: 'Menús activos', value: metrics.activeMenus, hint: 'Listos para heredar' },
+        { label: '�??reas', value: metrics.totalAreas, hint: 'Cat�logo maestro' },
+        { label: 'Perfiles base', value: metrics.baseProfiles, hint: 'Heredados por �rea' },
+        { label: 'Men�s', value: state.menus.length, hint: 'Cat�logo total disponible' },
+        { label: 'Men�s activos', value: metrics.activeMenus, hint: 'Listos para heredar' },
         { label: 'Alertas', value: metrics.usersWithoutMenus, hint: 'Usuarios sin acceso directo' },
       ].map(card => `
         <article class="summary-metric">
@@ -787,7 +795,7 @@
     const areaFilter = document.getElementById('userAreaFilter');
     if (areaFilter && !areaFilter.dataset.ready) {
       const options = [
-        '<option value="">Todas las áreas</option>',
+        '<option value="">Todas las �reas</option>',
         ...state.areas.map(area => `<option value="${escHtml(area.codigo)}">${escHtml(area.nombre)}</option>`),
       ];
       areaFilter.innerHTML = options.join('');
@@ -836,7 +844,7 @@
 
     const groups = groupMenus(state.menus.filter(menu => menu.activo));
     if (!groups.length) {
-      preview.innerHTML = '<div class="mini-empty">No hay menús activos.</div>';
+      preview.innerHTML = '<div class="mini-empty">No hay men�s activos.</div>';
       return;
     }
 
@@ -859,7 +867,7 @@
     if (!tbody) return;
 
     if (!state.menus.length) {
-      tbody.innerHTML = '<tr class="row-empty"><td colspan="8">Sin menús configurados.</td></tr>';
+      tbody.innerHTML = '<tr class="row-empty"><td colspan="8">Sin men�s configurados.</td></tr>';
       renderMenusPreview();
       return;
     }
@@ -900,13 +908,13 @@
         <td>${escHtml(profile.nombre)}</td>
         <td>${escHtml(profile.codigo)}</td>
         <td>${escHtml(areaLabel(profile.area) || '?')}</td>
-        <td>${escHtml(profile.es_base ? 'Sí' : 'No')}</td>
+        <td>${escHtml(profile.es_base ? 'S����' : 'No')}</td>
         <td><span class="table-status ${profile.activo ? 'table-status--activo' : 'table-status--inactivo'}">${profile.activo ? 'Activo' : 'Inactivo'}</span></td>
         <td>${Array.isArray(profile.menus) ? profile.menus.length : 0}</td>
         <td>
           <div class="action-group">
             <button class="btn-secondary" data-profile-action="edit" data-id="${profile.id}" type="button">Editar</button>
-            <button class="btn-secondary" data-profile-action="menus" data-id="${profile.id}" type="button">Menús</button>
+            <button class="btn-secondary" data-profile-action="menus" data-id="${profile.id}" type="button">Men�s</button>
             <button class="btn-secondary" data-profile-action="usuarios" data-id="${profile.id}" type="button">Usuarios</button>
             <button class="btn-secondary" data-profile-action="toggle" data-id="${profile.id}" type="button">${profile.activo ? 'Desactivar' : 'Activar'}</button>
             <button class="btn-danger" data-profile-action="delete" data-id="${profile.id}" type="button">Eliminar</button>
@@ -926,8 +934,8 @@
     if (blockedCount) blockedCount.textContent = String(Math.max(blocked, 0));
     if (note) {
       note.textContent = allowed
-        ? 'Selecciona los módulos que heredarán todos los usuarios con este perfil.'
-        : 'Este perfil no tiene menús asignados. Los usuarios con este perfil no recibirán accesos desde él.';
+        ? 'Selecciona los m����dulos que heredar����n todos los usuarios con este perfil.'
+        : 'Este perfil no tiene men�s asignados. Los usuarios con este perfil no recibir�n accesos desde �l.';
     }
   }
 
@@ -937,7 +945,7 @@
 
     const grouped = groupMenus(state.menus);
     if (!grouped.length) {
-      container.innerHTML = '<div class="mini-empty">Sin menús para mostrar.</div>';
+      container.innerHTML = '<div class="mini-empty">Sin men�s para mostrar.</div>';
       return;
     }
 
@@ -945,7 +953,7 @@
       <article class="permission-group">
         <div class="permission-group__header">
           <h4>${escHtml(group.group)}</h4>
-          <span class="permission-group__count">${group.items.length} menús</span>
+          <span class="permission-group__count">${group.items.length} men�s</span>
         </div>
         <div class="permission-list">
           ${group.items.map(menu => {
@@ -1046,14 +1054,14 @@
     const tbody = document.getElementById('areasTbody');
     if (tbody) {
       if (!state.areas.length) {
-        tbody.innerHTML = '<tr class="row-empty"><td colspan="6">Sin áreas configuradas.</td></tr>';
+        tbody.innerHTML = '<tr class="row-empty"><td colspan="6">Sin �reas configuradas.</td></tr>';
       } else {
         tbody.innerHTML = state.areas.map(area => `
           <tr>
             <td>${escHtml(area.nombre)}</td>
             <td>${escHtml(area.codigo)}</td>
             <td>${escHtml(area.perfil_base_nombre || area.perfil_base_codigo || 'Sin perfil')}</td>
-            <td>${escHtml(area.total_usuarios ?? 0)}</td>
+            <td>${escHtml(area.total_usuarios ? 0)}</td>
             <td><span class="table-status ${area.activo ? 'table-status--activo' : 'table-status--inactivo'}">${area.activo ? 'Activo' : 'Inactivo'}</span></td>
             <td>
               <div class="action-group">
@@ -1085,7 +1093,7 @@
     const areaSelect = document.getElementById('permAreaSelect');
     if (areaSelect && !areaSelect.dataset.ready) {
       areaSelect.innerHTML = [
-        '<option value="">Aplicar por área...</option>',
+        '<option value="">Aplicar por �rea...</option>',
         ...state.areas.map(area => `<option value="${escHtml(area.codigo)}">${escHtml(area.nombre)}</option>`),
       ].join('');
       areaSelect.dataset.ready = '1';
@@ -1124,7 +1132,7 @@
     const selected = selectedPermissionUser();
     const grouped = groupMenus(state.menus);
     if (!grouped.length) {
-      container.innerHTML = '<div class="mini-empty">Sin menús para mostrar.</div>';
+      container.innerHTML = '<div class="mini-empty">Sin men�s para mostrar.</div>';
       return;
     }
 
@@ -1132,7 +1140,7 @@
       <article class="permission-group">
         <div class="permission-group__header">
           <h4>${escHtml(group.group)}</h4>
-          <span class="permission-group__count">${group.items.length} menús</span>
+          <span class="permission-group__count">${group.items.length} men�s</span>
         </div>
         <div class="permission-list">
           ${group.items.map(menu => {
@@ -1257,19 +1265,387 @@
       codeInput.disabled = false;
     }
     if (typeSelect) typeSelect.value = 'P';
-    if (btn) btn.textContent = 'Agregar relación';
+    if (btn) btn.textContent = 'Agregar relaci�n';
+  }
+
+  function metaById(id) {
+    return state.metas.find(meta => Number(meta.id) === Number(id)) || null;
+  }
+
+  function currentMetaSelection() {
+    return metaById(state.selectedMetaId || state.metas[0]?.id || null);
+  }
+
+  function metaYearFromRow(meta) {
+    const fecha = String(meta?.fecha_formateada || meta?.fecha || '').slice(0, 10);
+    if (!fecha) return new Date().getFullYear();
+    return Number(fecha.slice(0, 4)) || new Date().getFullYear();
+  }
+
+  function metaMonthFromRow(meta) {
+    const fecha = String(meta?.fecha_formateada || meta?.fecha || '').slice(0, 10);
+    if (!fecha) return new Date().getMonth() + 1;
+    return Number(fecha.slice(5, 7)) || new Date().getMonth() + 1;
+  }
+
+  function formatMetaPeriod(meta) {
+    return meta?.tipo_periodo === 'anual' ? 'Anual' : 'Mensual';
+  }
+
+  function formatMetaDate(meta) {
+    const fecha = String(meta?.fecha_formateada || meta?.fecha || '').slice(0, 10);
+    if (!fecha) return '�?';
+    return fecha;
+  }
+
+  function metaMensualEfectiva(meta) {
+    if (!meta) return 0;
+    const base = Number(meta.meta || 0) || 0;
+    return base;
+  }
+
+  function parseMetaAmount(value) {
+    if (value === null || value === undefined || value === '') return 0;
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+    const compact = String(value).trim().replace(/[\s.,]/g, '');
+    const parsedCompact = Number(compact);
+    return Number.isFinite(parsedCompact) ? parsedCompact : 0;
+  }  function renderMetaPreview() {
+    const tipo = String(document.getElementById('metaTipoSelect')?.value || state.selectedMetaPeriodo || 'mensual');
+    const original = parseMetaAmount(document.getElementById('metaValorInput')?.value || state.selectedMetaValor || 0);
+    const mensual = original;
+    const formatter = new Intl.NumberFormat('es-CL');
+    const previewMain = document.getElementById('metaPreviewMain');
+    const previewSub = document.getElementById('metaPreviewSub');
+    const help = document.getElementById('metaHelp');
+
+    if (previewMain) {
+      previewMain.textContent = tipo === 'anual'
+        ? `Meta anual ingresada: ${formatter.format(original)}`
+        : `Meta mensual: ${formatter.format(original)}`;
+    }
+    if (previewSub) {
+      previewSub.textContent = tipo === 'anual'
+        ? `Meta aplicada a cada mes: ${formatter.format(mensual)}`
+        : 'La meta mensual se usa completa solo para el mes seleccionado.';
+    }
+    if (help) {
+      help.textContent = tipo === 'anual'
+        ? 'La meta anual corresponde al total del a�o. En el dashboard mensual se usar� el mismo monto en cada mes.'
+        : 'La meta mensual se usa completa solo para el mes seleccionado.';
+    }
+  }
+
+  function renderMetaMonthOptions(selectedMonth = 1) {
+    const meses = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
+    return meses.map((label, index) => `<option value="${index + 1}" ${Number(selectedMonth) === index + 1 ? 'selected' : ''}>${label}</option>`).join('');
+  }
+
+  function renderVendorMetaForm(meta = null) {
+    const userSelect = document.getElementById('metaUserSelect');
+    const tipoSelect = document.getElementById('metaTipoSelect');
+    const anioInput = document.getElementById('metaAnioInput');
+    const mesSelect = document.getElementById('metaMesInput');
+    const valorInput = document.getElementById('metaValorInput');
+    const obsInput = document.getElementById('metaObservacionInput');
+    const help = document.getElementById('metaHelp');
+
+    const selectedMeta = meta || currentMetaSelection();
+    const editing = Boolean(state.selectedMetaId && selectedMeta);
+    const selectedUserId = Number(state.selectedMetaUserId || selectedMeta?.usuario_id || state.users[0]?.id || 0) || null;
+    const selectedTipo = state.selectedMetaPeriodo || selectedMeta?.tipo_periodo || 'mensual';
+    const selectedAnio = Number(state.selectedMetaAnio || metaYearFromRow(selectedMeta) || new Date().getFullYear());
+    const selectedMes = Number(state.selectedMetaMes || metaMonthFromRow(selectedMeta) || new Date().getMonth() + 1);
+    const selectedValor = state.selectedMetaValor !== '' && state.selectedMetaValor !== null && state.selectedMetaValor !== undefined
+      ? state.selectedMetaValor
+      : selectedMeta?.meta ? '';
+    const selectedObservacion = state.selectedMetaObservacion !== '' && state.selectedMetaObservacion !== null && state.selectedMetaObservacion !== undefined
+      ? state.selectedMetaObservacion
+      : selectedMeta?.observacion || '';
+
+    if (userSelect) {
+      userSelect.innerHTML = state.users.length
+        ? state.users.map(user => `<option value="${escHtml(user.id)}">${escHtml(user.nombre)} ��a�� ${escHtml(formatAreaLabel(user.area))}</option>`).join('')
+        : '<option value="">Sin usuarios</option>';
+      userSelect.value = selectedUserId ? String(selectedUserId) : '';
+      userSelect.disabled = editing;
+    }
+
+    if (tipoSelect) {
+      tipoSelect.value = selectedTipo;
+      tipoSelect.disabled = false;
+    }
+
+    if (anioInput) {
+      anioInput.value = String(selectedAnio);
+      anioInput.disabled = editing;
+    }
+
+    if (mesSelect) {
+      mesSelect.innerHTML = renderMetaMonthOptions(selectedMes);
+      mesSelect.value = String(selectedMes);
+      mesSelect.disabled = selectedTipo === 'anual';
+    }
+
+    if (valorInput) {
+      valorInput.value = String(selectedValor);
+      valorInput.disabled = false;
+    }
+
+    if (obsInput) {
+      obsInput.value = String(selectedObservacion);
+      obsInput.disabled = false;
+    }
+    renderMetaPreview();
+
+    if (help) {
+      help.textContent = editing
+        ? 'Edici����n de una meta existente. El usuario y el per����odo quedan bloqueados para evitar duplicados.'
+        : 'Selecciona un usuario y define la meta mensual o anual. La mensual siempre prevalece en el c�lculo efectivo.';
+    }
+  }
+
+  function renderVendorMetas() {
+    const tbody = document.getElementById('vendorMetasTbody');
+    const clearButton = document.getElementById('btnLimpiarMeta');
+    const saveButton = document.getElementById('btnGuardarMeta');
+    const newButton = document.getElementById('btnNuevaMeta');
+    const tipoSelect = document.getElementById('metaTipoSelect');
+    const mesSelect = document.getElementById('metaMesInput');
+
+    renderVendorMetaForm();
+
+    if (tbody) {
+      if (!state.metas.length) {
+        tbody.innerHTML = '<tr class="row-empty"><td colspan="9">No hay metas registradas todav�a.</td></tr>';
+      } else {
+        tbody.innerHTML = state.metas.map(meta => {
+          const usuario = userById(meta.usuario_id);
+          const activo = meta.activo !== false;
+          return `
+            <tr>
+              <td>${escHtml(meta.usuario_nombre || usuario?.nombre || 'Sin usuario')}</td>
+              <td>${escHtml(formatAreaLabel(meta.usuario_area || usuario?.area || ''))}</td>
+              <td><span class="table-status table-status--admin">${escHtml(formatMetaPeriod(meta))}</span></td>
+              <td>${escHtml(formatMetaDate(meta))}</td>
+              <td>${escHtml(meta.meta_mensual !== undefined ? meta.meta_mensual : metaMensualEfectiva(meta))}</td>
+              <td>${escHtml(meta.meta_mensual !== undefined ? meta.meta_mensual : metaMensualEfectiva(meta))}</td>
+              <td><span class="badge ${activo ? 'badge--ok' : 'badge--blocked'}">${activo ? 'Activa' : 'Inactiva'}</span></td>
+              <td>${escHtml(meta.observacion || '�?')}</td>
+              <td>
+                <div class="action-group">
+                  <button class="btn-secondary" data-meta-action="edit" data-id="${escHtml(meta.id)}" type="button">Editar</button>
+                  <button class="${activo ? 'btn-danger' : 'btn-secondary'}" data-meta-action="${activo ? 'deactivate' : 'activate'}" data-id="${escHtml(meta.id)}" type="button">${activo ? 'Desactivar' : 'Activar'}</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    if (clearButton && !clearButton.dataset.bound) {
+      clearButton.addEventListener('click', () => {
+        state.selectedMetaId = null;
+        state.selectedMetaUserId = state.users[0]?.id || null;
+        state.selectedMetaPeriodo = 'mensual';
+        state.selectedMetaAnio = new Date().getFullYear();
+        state.selectedMetaMes = new Date().getMonth() + 1;
+        state.selectedMetaValor = '';
+        state.selectedMetaObservacion = '';
+        renderVendorMetas();
+      });
+      clearButton.dataset.bound = '1';
+    }
+
+    if (newButton && !newButton.dataset.bound) {
+      newButton.addEventListener('click', () => {
+        state.selectedMetaId = null;
+        state.selectedMetaUserId = state.users[0]?.id || null;
+        state.selectedMetaPeriodo = 'mensual';
+        state.selectedMetaAnio = new Date().getFullYear();
+        state.selectedMetaMes = new Date().getMonth() + 1;
+        state.selectedMetaValor = '';
+        state.selectedMetaObservacion = '';
+        renderVendorMetas();
+      });
+      newButton.dataset.bound = '1';
+    }
+
+    if (saveButton && !saveButton.dataset.bound) {
+      saveButton.addEventListener('click', () => saveVendorMeta().catch(handleAdminError));
+      saveButton.dataset.bound = '1';
+    }
+
+    if (tipoSelect && !tipoSelect.dataset.bound) {
+      tipoSelect.addEventListener('change', event => {
+        state.selectedMetaPeriodo = event.target.value === 'anual' ? 'anual' : 'mensual';
+        if (state.selectedMetaPeriodo === 'anual') {
+          state.selectedMetaMes = 1;
+        }
+        renderVendorMetas();
+      });
+      tipoSelect.dataset.bound = '1';
+    }
+
+    if (mesSelect && !mesSelect.dataset.bound) {
+      mesSelect.addEventListener('change', event => {
+        state.selectedMetaMes = Number(event.target.value) || 1;
+      });
+      mesSelect.dataset.bound = '1';
+    }
+
+    const userSelect = document.getElementById('metaUserSelect');
+    if (userSelect && !userSelect.dataset.bound) {
+      userSelect.addEventListener('change', event => {
+        state.selectedMetaUserId = Number(event.target.value) || null;
+      });
+      userSelect.dataset.bound = '1';
+    }
+
+    const anioInput = document.getElementById('metaAnioInput');
+    if (anioInput && !anioInput.dataset.bound) {
+      anioInput.addEventListener('change', event => {
+        state.selectedMetaAnio = Number(event.target.value) || new Date().getFullYear();
+      });
+      anioInput.dataset.bound = '1';
+    }
+
+    const valorInput = document.getElementById('metaValorInput');
+    if (valorInput && !valorInput.dataset.bound) {
+      valorInput.addEventListener('input', event => {
+        state.selectedMetaValor = event.target.value;
+        renderMetaPreview();
+      });
+      valorInput.dataset.bound = '1';
+    }
+
+    const obsInput = document.getElementById('metaObservacionInput');
+    if (obsInput && !obsInput.dataset.bound) {
+      obsInput.addEventListener('input', event => {
+        state.selectedMetaObservacion = event.target.value;
+      });
+      obsInput.dataset.bound = '1';
+    }
+
+    if (tbody && !tbody.dataset.bound) {
+      tbody.addEventListener('click', event => {
+        const actionBtn = event.target.closest('[data-meta-action]');
+        if (!actionBtn) return;
+        const metaId = Number(actionBtn.dataset.id);
+        const action = actionBtn.dataset.metaAction;
+        if (action === 'edit') {
+          const meta = metaById(metaId);
+          if (!meta) return;
+          state.selectedMetaId = meta.id;
+          state.selectedMetaUserId = meta.usuario_id;
+          state.selectedMetaPeriodo = meta.tipo_periodo || 'mensual';
+          state.selectedMetaAnio = metaYearFromRow(meta);
+          state.selectedMetaMes = metaMonthFromRow(meta);
+          state.selectedMetaValor = meta.meta;
+          state.selectedMetaObservacion = meta.observacion || '';
+          renderVendorMetas();
+          return;
+        }
+        if (action === 'activate' || action === 'deactivate') {
+          toggleVendorMetaStatus(metaId, action === 'activate').catch(handleAdminError);
+        }
+      });
+      tbody.dataset.bound = '1';
+    }
+  }
+
+  async function saveVendorMeta() {
+    const userSelect = document.getElementById('metaUserSelect');
+    const tipoSelect = document.getElementById('metaTipoSelect');
+    const anioInput = document.getElementById('metaAnioInput');
+    const mesSelect = document.getElementById('metaMesInput');
+    const valorInput = document.getElementById('metaValorInput');
+    const obsInput = document.getElementById('metaObservacionInput');
+
+    const payload = {
+      usuario_id: Number(userSelect?.value || state.selectedMetaUserId || 0) || null,
+      tipo_periodo: tipoSelect?.value === 'anual' ? 'anual' : 'mensual',
+      anio: Number(anioInput?.value || state.selectedMetaAnio || 0) || null,
+      mes: Number(mesSelect?.value || state.selectedMetaMes || 1) || 1,
+      meta: Number(valorInput?.value || state.selectedMetaValor || 0),
+      observacion: obsInput?.value || '',
+      activo: true,
+    };
+
+    if (!payload.usuario_id || !payload.anio || !Number.isFinite(payload.meta)) {
+      throw new Error('Completa usuario, a�o y meta antes de guardar.');
+    }
+
+    if (payload.meta < 0) {
+      throw new Error('La meta no puede ser negativa.');
+    }
+
+    if (payload.tipo_periodo === 'anual') {
+      payload.mes = 1;
+    }
+
+    if (state.selectedMetaId) {
+      await apiFetch(`/vendedor-metas/${state.selectedMetaId}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+      });
+      toast('Metas', 'Meta actualizada correctamente.', 'success');
+      pushAudit('Metas vendedores', 'Se actualiz� una meta de vendedor.');
+    } else {
+      await apiFetch('/vendedor-metas', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      toast('Metas', 'Meta creada correctamente.', 'success');
+      pushAudit('Metas vendedores', 'Se cre� una meta de vendedor.');
+    }
+
+    await loadData();
+    state.selectedMetaId = null;
+    state.selectedMetaUserId = state.users[0]?.id || null;
+    state.selectedMetaPeriodo = 'mensual';
+    state.selectedMetaAnio = new Date().getFullYear();
+    state.selectedMetaMes = new Date().getMonth() + 1;
+    state.selectedMetaValor = '';
+    state.selectedMetaObservacion = '';
+    renderVendorMetas();
+  }
+
+  async function toggleVendorMetaStatus(metaId, activate) {
+    await apiFetch(`/vendedor-metas/${metaId}/${activate ? 'activar' : 'desactivar'}`, {
+      method: 'PATCH',
+    });
+    toast('Metas', `Meta ${activate ? 'activada' : 'desactivada'}.`, 'success');
+    pushAudit('Metas vendedores', `Se ${activate ? 'activ����' : 'desactiv����'} una meta de vendedor.`);
+    await loadData();
+    renderVendorMetas();
   }
 
   function renderAudit() {
     const container = document.getElementById('auditTimeline');
     const subtitle = document.getElementById('auditSubtitle');
     if (subtitle && !state.audit.length) {
-      subtitle.textContent = 'Auditoría real pendiente de implementar.';
+      subtitle.textContent = 'Auditor�a real pendiente de implementar.';
     }
     if (!container) return;
 
     if (!state.audit.length) {
-      container.innerHTML = '<div class="mini-empty">Auditoría real pendiente de implementar.</div>';
+      container.innerHTML = '<div class="mini-empty">Auditor�a real pendiente de implementar.</div>';
       return;
     }
 
@@ -1333,55 +1709,55 @@
           <div class="drawer-field field-group" data-field-wrap="adminUserEmail">
             <label for="adminUserEmail">Email <span class="required-mark">*</span></label>
             <input class="input-control" id="adminUserEmail" type="email" value="${escHtml(user?.email || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Debe ser único y válido. Se usará para iniciar sesión. Ejemplo: usuario@texpro.cl.', 'adminUserEmail')}
+            ${fieldHelp('Debe ser �nico y v�lido. Se usar� para iniciar sesi�n. Ejemplo: usuario@texpro.cl.', 'adminUserEmail')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminUserCodigo">
-            <label for="adminUserCodigo">Código <span class="required-mark">*</span></label>
+            <label for="adminUserCodigo">C�digo <span class="required-mark">*</span></label>
             <input class="input-control" id="adminUserCodigo" type="text" value="${escHtml(user?.codigo || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Código interno o comercial si aplica. No ingresar IDs de base de datos.', 'adminUserCodigo')}
+            ${fieldHelp('C�digo interno o comercial si aplica. No ingresar IDs de base de datos.', 'adminUserCodigo')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminUserArea">
-            <label for="adminUserArea">Área <span class="required-mark">*</span></label>
+            <label for="adminUserArea">�??rea <span class="required-mark">*</span></label>
             <select class="select-control" id="adminUserArea" data-profile-suggest="#adminUserPerfilPrincipal" ${readOnly ? 'disabled' : ''}>
               ${state.areas.map(area => `<option value="${escHtml(area.codigo)}" ${(area.codigo === normalizeKey(user?.area || 'ventas')) ? 'selected' : ''}>${escHtml(area.nombre)}</option>`).join('')}
             </select>
-            ${fieldHelp('El área ayuda a sugerir perfiles y accesos base. Ejemplo: Ventas, Bodega, Administración.', 'adminUserArea')}
-            <button class="btn-secondary" type="button" data-quick-action="create-area" ${readOnly ? 'disabled' : ''}>Crear nueva área</button>
+            ${fieldHelp('El �rea ayuda a sugerir perfiles y accesos base. Ejemplo: Ventas, Bodega, Administraci�n.', 'adminUserArea')}
+            <button class="btn-secondary" type="button" data-quick-action="create-area" ${readOnly ? 'disabled' : ''}>Crear nueva ����rea</button>
           </div>
           <div class="drawer-field drawer-grid--single field-group" data-field-wrap="adminUserPerfilPrincipal">
             <label for="adminUserPerfilPrincipal">Perfil principal</label>
             <select class="select-control" id="adminUserPerfilPrincipal" ${readOnly ? 'disabled' : ''}>
               ${profileOptionsHtml(suggestedProfile?.codigo || '')}
             </select>
-            ${fieldHelp('Define los accesos base del usuario. Puedes agregar excepciones después.', 'adminUserPerfilPrincipal')}
+            ${fieldHelp('Define los accesos base del usuario. Puedes agregar excepciones despu�s.', 'adminUserPerfilPrincipal')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminUserIsAdmin">
             <label for="adminUserIsAdmin">Es administrador</label>
             <select class="select-control" id="adminUserIsAdmin" ${readOnly ? 'disabled' : ''}>
-              <option value="1" ${user?.is_admin ? 'selected' : ''}>Sí</option>
+              <option value="1" ${user?.is_admin ? 'selected' : ''}>S����</option>
               <option value="0" ${!user?.is_admin ? 'selected' : ''}>No</option>
             </select>
-            ${fieldHelp('Activar solo para usuarios que gestionarán usuarios, perfiles y permisos.', 'adminUserIsAdmin')}
+            ${fieldHelp('Activar solo para usuarios que gestionar�n usuarios, perfiles y permisos.', 'adminUserIsAdmin')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminUserIsActive">
             <label for="adminUserIsActive">Activo</label>
             <select class="select-control" id="adminUserIsActive" ${readOnly ? 'disabled' : ''}>
-              <option value="1" ${user?.is_active !== false ? 'selected' : ''}>Sí</option>
+              <option value="1" ${user?.is_active !== false ? 'selected' : ''}>S����</option>
               <option value="0" ${user?.is_active === false ? 'selected' : ''}>No</option>
             </select>
-            ${fieldHelp('Si está inactivo, el usuario no podrá iniciar sesión.', 'adminUserIsActive')}
+            ${fieldHelp('Si est� inactivo, el usuario no podr� iniciar sesi�n.', 'adminUserIsActive')}
           </div>
         </div>
         <div class="drawer-note">
           ${isEditing
-            ? 'La contraseña no se modifica desde esta vista. Usa el endpoint dedicado si necesitas actualizarla.'
-            : 'Si no indicas contraseña, el usuario se creará inactivo hasta definir una contraseña segura.'}
+            ? 'La contrase����a no se modifica desde esta vista. Usa el endpoint dedicado si necesitas actualizarla.'
+            : 'Si no indicas contrase�a, el usuario se crear� inactivo hasta definir una contrase�a segura.'}
         </div>
         ${isEditing ? '' : `
           <div class="drawer-field field-group" data-field-wrap="adminUserPassword">
-            <label for="adminUserPassword">Contraseña</label>
+            <label for="adminUserPassword">Contrase�a</label>
             <input class="input-control" id="adminUserPassword" type="password" placeholder="Opcional, pero recomendado" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('No usar contraseñas genéricas en producción. Debe cumplir la política definida.', 'adminUserPassword')}
+            ${fieldHelp('No usar contrase�as gen�ricas en producci�n. Debe cumplir la pol�tica definida.', 'adminUserPassword')}
           </div>
         `}
       </form>
@@ -1395,40 +1771,40 @@
           <div class="drawer-field field-group" data-field-wrap="adminMenuNombre">
             <label for="adminMenuNombre">Nombre visible <span class="required-mark">*</span></label>
             <input class="input-control" id="adminMenuNombre" data-slug-source="#adminMenuCodigo" type="text" value="${escHtml(menu?.nombre || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Texto que verá el usuario en el menú lateral. Ejemplo: Ventas Asignadas.', 'adminMenuNombre')}
+            ${fieldHelp('Texto que ver� el usuario en el men� lateral. Ejemplo: Ventas Asignadas.', 'adminMenuNombre')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminMenuCodigo">
-            <label for="adminMenuCodigo">Código <span class="required-mark">*</span></label>
+            <label for="adminMenuCodigo">C�digo <span class="required-mark">*</span></label>
             <input class="input-control" id="adminMenuCodigo" type="text" value="${escHtml(menu?.codigo || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Identificador interno único. Se genera automáticamente. Ejemplo: ventas_asignadas.', 'adminMenuCodigo')}
+            ${fieldHelp('Identificador interno �nico. Se genera autom�ticamente. Ejemplo: ventas_asignadas.', 'adminMenuCodigo')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminMenuGrupo">
             <label for="adminMenuGrupo">Grupo</label>
             <input class="input-control" id="adminMenuGrupo" type="text" value="${escHtml(menu?.grupo || 'General')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Categoría donde aparecerá el menú. Ejemplo: Ventas, General, Administración.', 'adminMenuGrupo')}
+            ${fieldHelp('Categor�a donde aparecer� el men�. Ejemplo: Ventas, General, Administraci�n.', 'adminMenuGrupo')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminMenuOrden">
             <label for="adminMenuOrden">Orden</label>
-            <input class="input-control" id="adminMenuOrden" type="number" min="0" value="${escHtml(menu?.orden ?? 0)}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Número para ordenar el menú dentro del grupo. Mientras menor, aparece más arriba.', 'adminMenuOrden')}
+            <input class="input-control" id="adminMenuOrden" type="number" min="0" value="${escHtml(menu?.orden ? 0)}" ${readOnly ? 'disabled' : ''} />
+            ${fieldHelp('N�mero para ordenar el men� dentro del grupo. Mientras menor, aparece m�s arriba.', 'adminMenuOrden')}
           </div>
           <div class="drawer-field drawer-grid--single field-group" data-field-wrap="adminMenuUrl">
             <label for="adminMenuUrl">URL <span class="required-mark">*</span></label>
             <input class="input-control" id="adminMenuUrl" type="text" value="${escHtml(menu?.url || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Ruta interna del módulo. Debe comenzar con /. Ejemplo: /src/modulo/ventas/ventas/index.html.', 'adminMenuUrl')}
+            ${fieldHelp('Ruta interna del m�dulo. Debe comenzar con /. Ejemplo: /src/modulo/ventas/ventas/index.html.', 'adminMenuUrl')}
           </div>
           <div class="drawer-field drawer-grid--single field-group" data-field-wrap="adminMenuIcono">
-            <label for="adminMenuIcono">Ícono</label>
+            <label for="adminMenuIcono">�??cono</label>
             <input class="input-control" id="adminMenuIcono" type="text" value="${escHtml(menu?.icono || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Emoji o ícono corto para mostrar en el menú. Ejemplo: 🔔, 🏠, 📋.', 'adminMenuIcono')}
+            ${fieldHelp('Emoji o �cono corto para mostrar en el men�. Ejemplo: �?�?, �??�, ??.', 'adminMenuIcono')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminMenuActivo">
             <label for="adminMenuActivo">Activo</label>
             <select class="select-control" id="adminMenuActivo" ${readOnly ? 'disabled' : ''}>
-              <option value="1" ${menu?.activo !== false ? 'selected' : ''}>Sí</option>
+              <option value="1" ${menu?.activo !== false ? 'selected' : ''}>S����</option>
               <option value="0" ${menu?.activo === false ? 'selected' : ''}>No</option>
             </select>
-            ${fieldHelp('Si está inactivo, no aparecerá aunque esté asignado.', 'adminMenuActivo')}
+            ${fieldHelp('Si est� inactivo, no aparecer� aunque est� asignado.', 'adminMenuActivo')}
           </div>
         </div>
       </form>
@@ -1445,38 +1821,38 @@
             ${fieldHelp('Nombre claro del rol o grupo de accesos. Ejemplo: Ventas, Gerencia, Bodega.', 'adminProfileNombre')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminProfileCodigo">
-            <label for="adminProfileCodigo">Código <span class="required-mark">*</span></label>
+            <label for="adminProfileCodigo">C�digo <span class="required-mark">*</span></label>
             <input class="input-control" id="adminProfileCodigo" type="text" value="${escHtml(profile?.codigo || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Se genera automáticamente desde el nombre. Usar minúsculas, sin espacios ni tildes. Ejemplo: servicio_tecnico.', 'adminProfileCodigo')}
+            ${fieldHelp('Se genera autom�ticamente desde el nombre. Usar min�sculas, sin espacios ni tildes. Ejemplo: servicio_tecnico.', 'adminProfileCodigo')}
           </div>
           <div class="drawer-field drawer-grid--single field-group" data-field-wrap="adminProfileDescripcion">
-            <label for="adminProfileDescripcion">Descripción</label>
+            <label for="adminProfileDescripcion">Descripci�n</label>
             <input class="input-control" id="adminProfileDescripcion" type="text" value="${escHtml(profile?.descripcion || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Explica para qué sirve el perfil. Ejemplo: Acceso base para vendedores.', 'adminProfileDescripcion')}
+            ${fieldHelp('Explica para qu� sirve el perfil. Ejemplo: Acceso base para vendedores.', 'adminProfileDescripcion')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminProfileArea">
-            <label for="adminProfileArea">Área asociada</label>
+            <label for="adminProfileArea">�??rea asociada</label>
             <select class="select-control" id="adminProfileArea" ${readOnly ? 'disabled' : ''}>
-              <option value="">Sin área</option>
+              <option value="">Sin �rea</option>
               ${state.areas.map(area => `<option value="${escHtml(area.codigo)}" ${(area.codigo === normalizeKey(profile?.area || '')) ? 'selected' : ''}>${escHtml(area.nombre)}</option>`).join('')}
             </select>
-            ${fieldHelp('Área sugerida para aplicar este perfil automáticamente a usuarios nuevos.', 'adminProfileArea')}
+            ${fieldHelp('�??rea sugerida para aplicar este perfil autom�ticamente a usuarios nuevos.', 'adminProfileArea')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminProfileEsBase">
-            <label for="adminProfileEsBase">Base automática</label>
+            <label for="adminProfileEsBase">Base autom�tica</label>
             <select class="select-control" id="adminProfileEsBase" ${readOnly ? 'disabled' : ''}>
-              <option value="1" ${profile?.es_base ? 'selected' : ''}>Sí</option>
+              <option value="1" ${profile?.es_base ? 'selected' : ''}>S����</option>
               <option value="0" ${!profile?.es_base ? 'selected' : ''}>No</option>
             </select>
-            ${fieldHelp('Si está activo, se asignará automáticamente según el área.', 'adminProfileEsBase')}
+            ${fieldHelp('Si est� activo, se asignar� autom�ticamente seg�n el �rea.', 'adminProfileEsBase')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminProfileActivo">
             <label for="adminProfileActivo">Activo</label>
             <select class="select-control" id="adminProfileActivo" ${readOnly ? 'disabled' : ''}>
-              <option value="1" ${profile?.activo !== false ? 'selected' : ''}>Sí</option>
+              <option value="1" ${profile?.activo !== false ? 'selected' : ''}>S����</option>
               <option value="0" ${profile?.activo === false ? 'selected' : ''}>No</option>
             </select>
-            ${fieldHelp('Si el perfil está inactivo, no debería asignarse a nuevos usuarios.', 'adminProfileActivo')}
+            ${fieldHelp('Si el perfil est� inactivo, no deber�a asignarse a nuevos usuarios.', 'adminProfileActivo')}
           </div>
         </div>
       </form>
@@ -1492,32 +1868,32 @@
           <div class="drawer-field field-group" data-field-wrap="adminAreaNombre">
             <label for="adminAreaNombre">Nombre visible <span class="required-mark">*</span></label>
             <input class="input-control" id="adminAreaNombre" data-slug-source="#adminAreaCodigo" type="text" value="${escHtml(area?.nombre || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Nombre visible del área. Ejemplo: Ventas, Bodega, Laboratorio.', 'adminAreaNombre')}
+            ${fieldHelp('Nombre visible del �rea. Ejemplo: Ventas, Bodega, Laboratorio.', 'adminAreaNombre')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminAreaCodigo">
-            <label for="adminAreaCodigo">Código <span class="required-mark">*</span></label>
+            <label for="adminAreaCodigo">C�digo <span class="required-mark">*</span></label>
             <input class="input-control" id="adminAreaCodigo" type="text" value="${escHtml(area?.codigo || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Identificador interno. Se genera automáticamente, sin espacios ni tildes.', 'adminAreaCodigo')}
+            ${fieldHelp('Identificador interno. Se genera autom�ticamente, sin espacios ni tildes.', 'adminAreaCodigo')}
           </div>
           <div class="drawer-field drawer-grid--single field-group" data-field-wrap="adminAreaDescripcion">
-            <label for="adminAreaDescripcion">Descripción</label>
+            <label for="adminAreaDescripcion">Descripci�n</label>
             <input class="input-control" id="adminAreaDescripcion" type="text" value="${escHtml(area?.descripcion || '')}" ${readOnly ? 'disabled' : ''} />
-            ${fieldHelp('Área sugerida para aplicar perfiles base y clasificar usuarios.', 'adminAreaDescripcion')}
+            ${fieldHelp('�??rea sugerida para aplicar perfiles base y clasificar usuarios.', 'adminAreaDescripcion')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminAreaPerfilBase">
             <label for="adminAreaPerfilBase">Perfil base</label>
             <select class="select-control" id="adminAreaPerfilBase" ${readOnly ? 'disabled' : ''}>
               ${profileOptionsByIdHtml(selectedProfileId)}
             </select>
-            ${fieldHelp('Perfil sugerido para los usuarios nuevos de esta área.', 'adminAreaPerfilBase')}
+            ${fieldHelp('Perfil sugerido para los usuarios nuevos de esta �rea.', 'adminAreaPerfilBase')}
           </div>
           <div class="drawer-field field-group" data-field-wrap="adminAreaActivo">
             <label for="adminAreaActivo">Activo</label>
             <select class="select-control" id="adminAreaActivo" ${readOnly ? 'disabled' : ''}>
-              <option value="1" ${(area?.activo !== false) ? 'selected' : ''}>Sí</option>
+              <option value="1" ${(area?.activo !== false) ? 'selected' : ''}>S����</option>
               <option value="0" ${(area?.activo === false) ? 'selected' : ''}>No</option>
             </select>
-            ${fieldHelp('Si el área está inactiva, no debería usarse para nuevos usuarios.', 'adminAreaActivo')}
+            ${fieldHelp('Si el �rea est� inactiva, no deber�a usarse para nuevos usuarios.', 'adminAreaActivo')}
           </div>
         </div>
       </form>
@@ -1532,7 +1908,7 @@
 
     const selectedArea = areaById(state.selectedAreaId) || activeAreas()[0] || state.areas[0] || null;
     if (areaSelect) {
-      areaSelect.innerHTML = state.areas.map(area => `<option value="${escHtml(area.id)}">${escHtml(area.nombre)}${area.activo ? '' : ' · Inactiva'}</option>`).join('');
+      areaSelect.innerHTML = state.areas.map(area => `<option value="${escHtml(area.id)}">${escHtml(area.nombre)}${area.activo ? '' : ' ��a�� Inactiva'}</option>`).join('');
     }
     if (selectedArea && areaSelect) {
       areaSelect.value = String(selectedArea.id);
@@ -1554,14 +1930,14 @@
               <strong>${escHtml(user.nombre)}</strong>
               <span>${escHtml(user.email || 'sin correo')}</span>
             </div>
-          `).join('') + (previewUsers.length > 8 ? `<div class="mini-empty">Y ${previewUsers.length - 8} usuario(s) más.</div>` : '')
-        : '<div class="mini-empty">No hay usuarios activos en esta área.</div>';
+          `).join('') + (previewUsers.length > 8 ? `<div class="mini-empty">Y ${previewUsers.length - 8} usuario(s) m����s.</div>` : '')
+        : '<div class="mini-empty">No hay usuarios activos en esta �rea.</div>';
     }
 
     if (baseHint) {
       baseHint.textContent = selectedArea?.perfil_base_nombre
         ? `Perfil base sugerido: ${selectedArea.perfil_base_nombre}.`
-        : 'Esta área no tiene perfil base asociado todavía.';
+        : 'Esta �rea no tiene perfil base asociado todav�a.';
     }
   }
   function renderDrawer() {
@@ -1580,11 +1956,11 @@
 
     if (title) {
       if (state.drawer.type === 'menu') {
-        title.textContent = state.drawer.mode === 'new' ? 'Nuevo menú' : 'Editar menú';
+        title.textContent = state.drawer.mode === 'new' ? 'Nuevo men����' : 'Editar men����';
       } else if (state.drawer.type === 'profile') {
         title.textContent = state.drawer.mode === 'new' ? 'Nuevo perfil' : 'Editar perfil';
       } else if (state.drawer.type === 'area') {
-        title.textContent = state.drawer.mode === 'new' ? 'Nueva área' : 'Editar área';
+        title.textContent = state.drawer.mode === 'new' ? 'Nueva ����rea' : 'Editar ����rea';
       } else {
         title.textContent = state.drawer.mode === 'new' ? 'Nuevo usuario' : 'Editar usuario';
       }
@@ -1592,11 +1968,11 @@
 
     if (subtitle) {
       if (state.drawer.type === 'menu') {
-        subtitle.textContent = 'Mantén el catálogo de navegación sincronizado con usuario_menu.';
+        subtitle.textContent = 'Mant�n el cat�logo de navegaci�n sincronizado con usuario_menu.';
       } else if (state.drawer.type === 'profile') {
         subtitle.textContent = 'Gestiona perfiles base y perfiles manuales sin romper usuario_menu.';
       } else if (state.drawer.type === 'area') {
-        subtitle.textContent = 'Gestiona el catálogo maestro de áreas y su perfil base sugerido.';
+        subtitle.textContent = 'Gestiona el cat�logo maestro de �reas y su perfil base sugerido.';
       } else {
         subtitle.textContent = 'Gestiona usuarios reales del sistema sin depender de datos mock.';
       }
@@ -1622,27 +1998,27 @@
     if (del) del.hidden = state.drawer.type === 'area' || state.drawer.readOnly;
     if (danger) {
       danger.textContent = state.drawer.type === 'menu'
-        ? 'Desactivar menú'
+        ? 'Desactivar men����'
         : state.drawer.type === 'profile'
           ? 'Desactivar perfil'
           : state.drawer.type === 'area'
-            ? 'Desactivar área'
+            ? 'Desactivar ����rea'
             : 'Desactivar usuario';
     }
     if (del) {
       del.textContent = state.drawer.type === 'menu'
-        ? 'Eliminar menú'
+        ? 'Eliminar men����'
         : state.drawer.type === 'profile'
           ? 'Eliminar perfil'
           : 'Eliminar usuario';
     }
     if (primary) {
       primary.textContent = state.drawer.type === 'menu'
-        ? 'Guardar menú'
+        ? 'Guardar men����'
         : state.drawer.type === 'profile'
           ? 'Guardar perfil'
           : state.drawer.type === 'area'
-            ? 'Guardar área'
+            ? 'Guardar ����rea'
             : 'Guardar usuario';
     }
 
@@ -1684,7 +2060,7 @@
 
   async function loadData() {
     state.loading = true;
-    setMessage('Cargando información real desde la API...', 'info');
+    setMessage('Cargando informaci�n real desde la API...', 'info');
     renderLoadingState();
 
     try {
@@ -1725,7 +2101,7 @@
       state.error = error.message;
       setMessage(error.message, 'error');
       renderLoadingState();
-      toast('Administración', error.message, 'error');
+      toast('Administraci�n', error.message, 'error');
     }
   }
 
@@ -1744,13 +2120,13 @@
 
     if (state.loading) {
       if (usersBody) usersBody.innerHTML = '<tr class="row-empty"><td colspan="10">Cargando usuarios...</td></tr>';
-      if (menusBody) menusBody.innerHTML = '<tr class="row-empty"><td colspan="9">Cargando menús...</td></tr>';
+      if (menusBody) menusBody.innerHTML = '<tr class="row-empty"><td colspan="9">Cargando men�s...</td></tr>';
       if (profilesBody) profilesBody.innerHTML = '<tr class="row-empty"><td colspan="8">Cargando perfiles...</td></tr>';
-      if (areasBody) areasBody.innerHTML = '<tr class="row-empty"><td colspan="6">Cargando áreas...</td></tr>';
+      if (areasBody) areasBody.innerHTML = '<tr class="row-empty"><td colspan="6">Cargando �reas...</td></tr>';
       if (areaApplyPreview) areaApplyPreview.innerHTML = '<div class="mini-empty">Cargando vista previa...</div>';
       if (permissions) permissions.innerHTML = '<div class="mini-empty">Cargando permisos...</div>';
       if (assignments) assignments.innerHTML = '<tr class="row-empty"><td colspan="4">Cargando vendedores...</td></tr>';
-      if (audit) audit.innerHTML = '<div class="mini-empty">Cargando auditoría...</div>';
+      if (audit) audit.innerHTML = '<div class="mini-empty">Cargando auditor�a...</div>';
       if (summaryGrid) summaryGrid.innerHTML = '<div class="mini-empty">Cargando resumen...</div>';
       if (warningsList) warningsList.innerHTML = '<div class="mini-empty">Cargando alertas...</div>';
       if (changesList) changesList.innerHTML = '<div class="mini-empty">Cargando cambios...</div>';
@@ -1779,7 +2155,7 @@
   async function saveCurrentDrawer() {
     const validation = validateDrawerByType(state.drawer.type);
     if (!validation.valid) {
-      toast('Validación', 'Revisa los campos marcados antes de guardar.', 'error');
+      toast('Validaci�n', 'Revisa los campos marcados antes de guardar.', 'error');
       return;
     }
 
@@ -1802,12 +2178,12 @@
           const existingProfiles = Array.isArray(created?.data?.perfiles) ? created.data.perfiles : [];
           await syncUserPrincipalProfile(createdUserId, primaryProfileCode, existingProfiles);
         }
-        pushAudit('Usuario creado', `Se creó el usuario ${nombre}.`);
+        pushAudit('Usuario creado', `Se cre� el usuario ${nombre}.`);
         toast('Usuarios', 'Usuario creado correctamente.', 'success');
       } else {
         const current = userById(state.drawer.id);
         if (current && Number(current.id) === getCurrentUserId() && !isAdmin) {
-          const confirmed = window.confirm('Estás por quitarte el acceso de administrador. ¿Quieres continuar?');
+          const confirmed = window.confirm('Est����s por quitarte el acceso de administrador. ��a��Quieres continuar?');
           if (!confirmed) return;
           payload.confirmar = true;
         }
@@ -1835,12 +2211,12 @@
 
       if (state.drawer.mode === 'new') {
         await apiFetch('/menus', { method: 'POST', body: JSON.stringify(payload) });
-        pushAudit('Menú creado', `Se creó el menú ${payload.nombre}.`);
-        toast('Menús', 'Menú creado correctamente.', 'success');
+        pushAudit('Men� creado', `Se cre� el men� ${payload.nombre}.`);
+        toast('Men�s', 'Men� creado correctamente.', 'success');
       } else {
         await apiFetch(`/menus/${state.drawer.id}`, { method: 'PUT', body: JSON.stringify(payload) });
-        pushAudit('Menú actualizado', `Se actualizó el menú ${payload.nombre}.`);
-        toast('Menús', 'Menú actualizado correctamente.', 'success');
+        pushAudit('Men� actualizado', `Se actualiz� el men� ${payload.nombre}.`);
+        toast('Men�s', 'Men� actualizado correctamente.', 'success');
       }
 
       closeDrawer();
@@ -1862,9 +2238,9 @@
     if (state.drawer.type === 'user') {
       const current = userById(state.drawer.id);
       if (!current) return;
-      if (!window.confirm(`¿Desactivar lógicamente al usuario ${current.nombre}?`)) return;
+      if (!window.confirm(`��a��Desactivar l����gicamente al usuario ${current.nombre}?`)) return;
       await apiFetch(`/usuarios/${state.drawer.id}`, { method: 'DELETE', body: JSON.stringify({ confirmar: true }) });
-      pushAudit('Usuario desactivado', `Se desactivó a ${current.nombre}.`);
+      pushAudit('Usuario desactivado', `Se desactiv� a ${current.nombre}.`);
       toast('Usuarios', 'Usuario desactivado.', 'success');
       closeDrawer();
       await loadData();
@@ -1874,9 +2250,9 @@
     if (state.drawer.type === 'profile') {
       const currentProfile = profileById(state.drawer.id);
       if (!currentProfile) return;
-      if (!window.confirm(`¿Eliminar el perfil ${currentProfile.nombre}?`)) return;
+      if (!window.confirm(`��a��Eliminar el perfil ${currentProfile.nombre}?`)) return;
       await apiFetch(`/perfiles/${state.drawer.id}`, { method: 'DELETE' });
-      pushAudit('Perfil eliminado', `Se eliminó o desactivó el perfil ${currentProfile.nombre}.`);
+      pushAudit('Perfil eliminado', `Se elimin� o desactiv� el perfil ${currentProfile.nombre}.`);
       toast('Perfiles', 'Perfil procesado correctamente.', 'success');
       closeDrawer();
       await loadData();
@@ -1889,10 +2265,10 @@
 
     const current = menuById(state.drawer.id);
     if (!current) return;
-    if (!window.confirm(`¿Eliminar el menú ${current.nombre}?`)) return;
+    if (!window.confirm(`��a��Eliminar el men���� ${current.nombre}?`)) return;
     await apiFetch(`/menus/${state.drawer.id}`, { method: 'DELETE' });
-    pushAudit('Menú eliminado', `Se eliminó o desactivó el menú ${current.nombre}.`);
-    toast('Menús', 'Menú procesado correctamente.', 'success');
+    pushAudit('Men� eliminado', `Se elimin� o desactiv� el men� ${current.nombre}.`);
+    toast('Men�s', 'Men� procesado correctamente.', 'success');
     closeDrawer();
     await loadData();
   }
@@ -1902,13 +2278,13 @@
       const current = userById(state.drawer.id);
       if (!current) return;
       const nextActive = !current.is_active;
-      const confirmed = nextActive || window.confirm(`¿Desactivar a ${current.nombre}?`);
+      const confirmed = nextActive || window.confirm(`��a��Desactivar a ${current.nombre}?`);
       if (!confirmed) return;
       await apiFetch(`/usuarios/${state.drawer.id}/${nextActive ? 'activar' : 'desactivar'}`, {
         method: 'PATCH',
         body: JSON.stringify({ confirmar: true }),
       });
-      pushAudit(nextActive ? 'Usuario activado' : 'Usuario desactivado', `${current.nombre} cambió de estado.`);
+      pushAudit(nextActive ? 'Usuario activado' : 'Usuario desactivado', `${current.nombre} cambi���� de estado.`);
       toast('Usuarios', `Usuario ${nextActive ? 'activado' : 'desactivado'}.`, 'success');
       closeDrawer();
       await loadData();
@@ -1919,8 +2295,8 @@
       const current = menuById(state.drawer.id);
       if (!current) return;
       await apiFetch(`/menus/${state.drawer.id}/${current.activo ? 'desactivar' : 'activar'}`, { method: 'PATCH' });
-      pushAudit(current.activo ? 'Menú desactivado' : 'Menú activado', `${current.nombre} cambió de estado.`);
-      toast('Menús', `Menú ${current.activo ? 'desactivado' : 'activado'}.`, 'success');
+      pushAudit(current.activo ? 'Men���� desactivado' : 'Men���� activado', `${current.nombre} cambi���� de estado.`);
+      toast('Men����s', `Men���� ${current.activo ? 'desactivado' : 'activado'}.`, 'success');
       closeDrawer();
       await loadData();
       return;
@@ -1930,7 +2306,7 @@
       const current = profileById(state.drawer.id);
       if (!current) return;
       await apiFetch(`/perfiles/${state.drawer.id}/${current.activo ? 'desactivar' : 'activar'}`, { method: 'PATCH' });
-      pushAudit(current.activo ? 'Perfil desactivado' : 'Perfil activado', `${current.nombre} cambió de estado.`);
+      pushAudit(current.activo ? 'Perfil desactivado' : 'Perfil activado', `${current.nombre} cambi���� de estado.`);
       toast('Perfiles', `Perfil ${current.activo ? 'desactivado' : 'activado'}.`, 'success');
       closeDrawer();
       await loadData();
@@ -1941,14 +2317,14 @@
       const current = areaById(state.drawer.id);
       if (!current) return;
       const nextActive = !current.activo;
-      const confirmed = nextActive || window.confirm(`¿Desactivar el área ${current.nombre}?`);
+      const confirmed = nextActive || window.confirm(`��a��Desactivar el ����rea ${current.nombre}?`);
       if (!confirmed) return;
       await apiFetch(`/areas/${state.drawer.id}/${nextActive ? 'activar' : 'desactivar'}`, {
         method: 'PATCH',
         body: JSON.stringify({ confirmar: true }),
       });
-      pushAudit(nextActive ? 'Área activada' : 'Área desactivada', `${current.nombre} cambió de estado.`);
-      toast('Áreas', `Área ${nextActive ? 'activada' : 'desactivada'}.`, 'success');
+      pushAudit(nextActive ? '����rea activada' : '����rea desactivada', `${current.nombre} cambi���� de estado.`);
+      toast('����reas', `����rea ${nextActive ? 'activada' : 'desactivada'}.`, 'success');
       closeDrawer();
       await loadData();
     }
@@ -1965,7 +2341,7 @@
     const currentId = getCurrentUserId();
     const keepingAdmin = menus.some(code => normalizeKey(code) === ADMIN_MENU_CODE);
     if (Number(user.id) === Number(currentId) && !keepingAdmin) {
-      const confirmed = window.confirm('Estás por quitarte el acceso a Administración. ¿Quieres continuar?');
+      const confirmed = window.confirm('Est����s por quitarte el acceso a Administraci����n. ��a��Quieres continuar?');
       if (!confirmed) return;
       payload.confirmar = true;
     }
@@ -1975,8 +2351,8 @@
       body: JSON.stringify(payload),
     });
 
-    pushAudit('Permisos actualizados', `Se guardaron los menús del usuario ${user.nombre}.`);
-    toast('Permisos', 'Menús guardados correctamente.', 'success');
+    pushAudit('Permisos actualizados', `Se guardaron los men�s del usuario ${user.nombre}.`);
+    toast('Permisos', 'Men�s guardados correctamente.', 'success');
     await loadData();
     await syncPermissionDraft(user.id);
   }
@@ -1990,16 +2366,16 @@
       .filter(Boolean);
     if (!menus.length) {
       const note = document.getElementById('profileMenuNote');
-      if (note) note.textContent = 'Este perfil no tiene menús asignados. Los usuarios con este perfil no recibirán accesos desde él.';
-      toast('Perfiles', 'Este perfil no tiene menús asignados. Los usuarios con este perfil no recibirán accesos desde él.', 'warn');
+      if (note) note.textContent = 'Este perfil no tiene men�s asignados. Los usuarios con este perfil no recibir�n accesos desde �l.';
+      toast('Perfiles', 'Este perfil no tiene men�s asignados. Los usuarios con este perfil no recibir�n accesos desde �l.', 'warn');
     }
     await apiFetch(`/perfiles/${profile.id}/menus`, {
       method: 'PUT',
       body: JSON.stringify({ menus }),
     });
 
-    pushAudit('Menús por perfil', `Se guardaron los menús del perfil ${profile.nombre}.`);
-    toast('Perfiles', 'Menús del perfil guardados correctamente.', 'success');
+    pushAudit('Men�s por perfil', `Se guardaron los men�s del perfil ${profile.nombre}.`);
+    toast('Perfiles', 'Men�s del perfil guardados correctamente.', 'success');
     await loadData();
     await syncProfileMenuDraft(profile.id);
   }
@@ -2033,13 +2409,13 @@
 
     const validation = validateDrawerByType('profile');
     if (!validation.valid) {
-      toast('Validación', 'Revisa los campos marcados antes de guardar.', 'error');
+      toast('Validaci�n', 'Revisa los campos marcados antes de guardar.', 'error');
       return;
     }
 
     if (state.drawer.mode === 'new') {
       await apiFetch('/perfiles', { method: 'POST', body: JSON.stringify(payload) });
-      pushAudit('Perfil creado', `Se creó el perfil ${payload.nombre}.`);
+      pushAudit('Perfil creado', `Se cre� el perfil ${payload.nombre}.`);
       toast('Perfiles', 'Perfil creado correctamente.', 'success');
     } else {
       await apiFetch(`/perfiles/${state.drawer.id}`, { method: 'PUT', body: JSON.stringify(payload) });
@@ -2057,17 +2433,17 @@
 
     const selectedProfile = profileId ? profileById(profileId) : profileById(area.perfil_base_id || state.selectedAreaProfileId);
     if (!selectedProfile) {
-      toast('Áreas', 'Selecciona un perfil base antes de aplicar.', 'warn');
+      toast('�??reas', 'Selecciona un perfil base antes de aplicar.', 'warn');
       return;
     }
 
     const affectedUsers = state.users.filter(user => user.is_active !== false && normalizeKey(user.area) === normalizeKey(area.codigo));
     if (!affectedUsers.length) {
-      toast('Áreas', 'No hay usuarios activos en esta área.', 'warn');
+      toast('�??reas', 'No hay usuarios activos en esta �rea.', 'warn');
       return;
     }
 
-    const confirmed = window.confirm(`¿Aplicar el perfil ${selectedProfile.nombre} al área ${area.nombre}?`);
+    const confirmed = window.confirm(`��a��Aplicar el perfil ${selectedProfile.nombre} al ����rea ${area.nombre}?`);
     if (!confirmed) return;
 
     const response = await apiFetch(`/areas/${area.id}/aplicar-perfil`, {
@@ -2075,8 +2451,8 @@
       body: JSON.stringify({ perfil_id: selectedProfile.id }),
     });
 
-    pushAudit('Perfil aplicado por área', `Se aplicó ${selectedProfile.nombre} al área ${area.nombre}.`);
-    toast('Áreas', `Perfil aplicado a ${response.data?.afectados || affectedUsers.length} usuario(s).`, 'success');
+    pushAudit('Perfil aplicado por �rea', `Se aplic� ${selectedProfile.nombre} al �rea ${area.nombre}.`);
+    toast('����reas', `Perfil aplicado a ${response.data?.afectados || affectedUsers.length} usuario(s).`, 'success');
     state.selectedAreaId = Number(area.id);
     state.selectedAreaProfileId = Number(selectedProfile.id);
     await loadData();
@@ -2093,18 +2469,18 @@
 
     const validation = validateDrawerByType('area');
     if (!validation.valid) {
-      toast('Validación', 'Revisa los campos marcados antes de guardar.', 'error');
+      toast('Validaci�n', 'Revisa los campos marcados antes de guardar.', 'error');
       return;
     }
 
     if (state.drawer.mode === 'new') {
       await apiFetch('/areas', { method: 'POST', body: JSON.stringify(payload) });
-      pushAudit('Área creada', `Se creó el área ${payload.nombre}.`);
-      toast('Áreas', 'Área creada correctamente.', 'success');
+      pushAudit('�??rea creada', `Se cre� el �rea ${payload.nombre}.`);
+      toast('�??reas', '�??rea creada correctamente.', 'success');
     } else {
       await apiFetch(`/areas/${state.drawer.id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      pushAudit('Área actualizada', `Se actualizó el área ${payload.nombre}.`);
-      toast('Áreas', 'Área actualizada correctamente.', 'success');
+      pushAudit('�??rea actualizada', `Se actualiz� el �rea ${payload.nombre}.`);
+      toast('�??reas', '�??rea actualizada correctamente.', 'success');
     }
 
     closeDrawer();
@@ -2119,7 +2495,7 @@
     const suggestions = area?.sugeridos || buildSuggestions(areaCode);
     const affectedUsers = state.users.filter(user => normalizeKey(user.area) === normalizeKey(areaCode) && user.is_active !== false);
     if (!suggestions.length) {
-      toast('Áreas', 'No hay menús sugeridos para esta área.', 'warn');
+      toast('�??reas', 'No hay men�s sugeridos para esta �rea.', 'warn');
       return;
     }
 
@@ -2128,9 +2504,9 @@
       body: JSON.stringify({ area: areaCode, menus: suggestions }),
     });
 
-    pushAudit('Accesos por área', `Se aplicaron menús a ${formatAreaLabel(areaCode)}.`);
-    setMessage(`Área ${formatAreaLabel(areaCode)}: ${affectedUsers.length} usuario(s) afectados. No se eliminarán accesos directos ni otros perfiles.`, 'warn');
-    toast('Áreas', `Accesos aplicados para ${formatAreaLabel(areaCode)}.`, 'success');
+    pushAudit('Accesos por �rea', `Se aplicaron men�s a ${formatAreaLabel(areaCode)}.`);
+    setMessage(`�??rea ${formatAreaLabel(areaCode)}: ${affectedUsers.length} usuario(s) afectados. No se eliminar�n accesos directos ni otros perfiles.`, 'warn');
+    toast('�??reas', `Accesos aplicados para ${formatAreaLabel(areaCode)}.`, 'success');
     await loadData();
   }
   async function saveVendorRelation() {
@@ -2138,7 +2514,7 @@
     const cod = document.getElementById('assignVendorCode')?.value.trim().toUpperCase();
     const tipo = document.getElementById('assignVendorType')?.value;
     if (!userId || !cod || !tipo) {
-      toast('Validación', 'Selecciona usuario, código y tipo.', 'error');
+      toast('Validaci�n', 'Selecciona usuario, c�digo y tipo.', 'error');
       return;
     }
 
@@ -2148,15 +2524,15 @@
     const duplicateOtherUser = state.users.some(user => Number(user.id) !== Number(userId) && Array.isArray(user.vendedores) && user.vendedores.some(item => normalizeText(item.cod_vendedor).toUpperCase() === normalizedCode));
 
     if (!normalizedCode) {
-      toast('Validación', 'El código vendedor no puede quedar vacío.', 'error');
+      toast('Validaci�n', 'El c�digo vendedor no puede quedar vac�o.', 'error');
       return;
     }
     if (duplicateSameUser) {
-      toast('Vendedores', 'Este usuario ya tiene ese código vendedor.', 'warn');
+      toast('Vendedores', 'Este usuario ya tiene ese c�digo vendedor.', 'warn');
       return;
     }
     if (duplicateOtherUser && !state.vendorEditCode) {
-      toast('Vendedores', 'Este código ya está asociado a otro usuario. Revisa antes de continuar.', 'warn');
+      toast('Vendedores', 'Este c�digo ya est� asociado a otro usuario. Revisa antes de continuar.', 'warn');
       return;
     }
 
@@ -2165,7 +2541,7 @@
         method: 'PUT',
         body: JSON.stringify({ tipo }),
       });
-      pushAudit('Vendedor actualizado', `Se cambió el tipo de ${state.vendorEditCode}.`);
+      pushAudit('Vendedor actualizado', `Se cambi� el tipo de ${state.vendorEditCode}.`);
       toast('Vendedores', 'Tipo actualizado correctamente.', 'success');
     } else {
       await apiFetch(`/usuarios/${userId}/vendedores`, {
@@ -2189,10 +2565,10 @@
       return;
     }
 
-    if (!window.confirm(`¿Quitar el vendedor ${cod} del usuario?`)) return;
+    if (!window.confirm(`��a��Quitar el vendedor ${cod} del usuario?`)) return;
     await apiFetch(`/usuarios/${userId}/vendedores/${encodeURIComponent(cod)}`, { method: 'DELETE' });
-    pushAudit('Vendedor eliminado', `Se quitó ${cod} del usuario seleccionado.`);
-    toast('Vendedores', 'Relación eliminada.', 'success');
+    pushAudit('Vendedor eliminado', `Se quit� ${cod} del usuario seleccionado.`);
+    toast('Vendedores', 'Relaci�n eliminada.', 'success');
     await loadData();
     state.selectedVendorUserId = Number(userId);
     renderVendorSelect();
@@ -2309,7 +2685,7 @@
       areaApplyButton.addEventListener('click', () => {
         const area = areaById(state.selectedAreaId || areaApplySelect?.value || null);
         if (!area) {
-          toast('Áreas', 'Selecciona un área primero.', 'warn');
+          toast('�??reas', 'Selecciona un �rea primero.', 'warn');
           return;
         }
         const profileId = Number(areaApplyProfileSelect?.value || area.perfil_base_id || 0) || null;
@@ -2726,7 +3102,7 @@
     bindEvents();
   }
 
-  function setLoading(text = 'Cargando información real...', type = 'info') {
+  function setLoading(text = 'Cargando informaci�n real...', type = 'info') {
     state.loading = true;
     setMessage(text, type);
     renderLoadingState();
@@ -2755,6 +3131,7 @@
     init();
   }
 })();
+
 
 
 

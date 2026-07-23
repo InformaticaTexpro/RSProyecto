@@ -77,12 +77,30 @@ beforeEach(() => {
 
 describe('Routing precedence for /api/dashboard', () => {
   test('GET /resumen responde desde dashboard.ajustes.js', async () => {
+    mockQuery
+      .mockResolvedValueOnce([[
+        {
+          id: 10,
+          usuario_id: 1,
+          fecha: '2026-01-01',
+          meta: 40613761,
+          tipo_periodo: 'anual',
+          activo: 1,
+        },
+      ]])
+      .mockResolvedValueOnce([[]]);
     const app = buildApp();
 
     const res = await request(app).get('/api/dashboard/resumen?mes=6&anio=2026');
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
+    expect(res.body.meta).toBe(40613761);
+    expect(res.body.metaInfo).toMatchObject({
+      meta_original: 40613761,
+      meta_mes: 40613761,
+      prorrateada: false,
+    });
 
     const sql = mockSoftlandRequest.query.mock.calls[0][0];
     expect(sql).toContain('AS totalLista');

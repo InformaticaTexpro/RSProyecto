@@ -12,7 +12,7 @@ const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const RUT_RE = /^\d{1,2}\.?\d{3}\.?\d{3}-?[0-9Kk]$/;
 
 function validateFolio(value) {
-  const s = String(value ?? '').trim();
+  const s = String(value ? '').trim();
   if (!/^\d+$/.test(s)) {
     throw new Error(`Folio inválido: "${value}". Debe ser un entero positivo.`);
   }
@@ -40,7 +40,7 @@ function validatePorcentaje(value) {
 }
 
 function validateId(value) {
-  const s = String(value ?? '').trim();
+  const s = String(value ? '').trim();
   if (!/^\d+$/.test(s)) {
     throw new Error(`ID inválido: "${value}". Debe ser un entero positivo.`);
   }
@@ -60,7 +60,7 @@ function validateEmail(value) {
 }
 
 function validateIsoDate(value, fieldName = 'fecha') {
-  const s = String(value ?? '').trim();
+  const s = String(value ? '').trim();
   if (!ISO_DATE_RE.test(s)) {
     throw new Error(`${fieldName} inválida: debe usar formato YYYY-MM-DD.`);
   }
@@ -72,7 +72,7 @@ function validateIsoDate(value, fieldName = 'fecha') {
 }
 
 function validateRut(value) {
-  const rut = String(value ?? '').trim();
+  const rut = String(value ? '').trim();
   if (!RUT_RE.test(rut)) {
     throw new Error('RUT inválido. Usa formato 12345678-9 o 12.345.678-9.');
   }

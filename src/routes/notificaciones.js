@@ -18,7 +18,7 @@
  *   4) Llama al modelo para consultar/actualizar BD
  *   5) Responde JSON uniforme { ok: boolean, ... }
  *
- * GET  /api/notificaciones            — lista (query: ?soloNoLeidas=1&limit=30)
+ * GET  /api/notificaciones             lista (query: ?soloNoLeidas=1&limit=30)
  * GET  /api/notificaciones/contador   — { ok, total } no leídas
  * PATCH /api/notificaciones/:id/leer  — marca una como leída
  * PATCH /api/notificaciones/leer-todo — marca todas como leídas

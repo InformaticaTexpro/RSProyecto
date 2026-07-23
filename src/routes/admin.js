@@ -5,6 +5,12 @@ const crypto = require('crypto');
 const db = require('../config/db');
 const { requireAuth } = require('../middlewares/requireAuth');
 const { hashPasswordDjango } = require('../utils/pbkdf2Django');
+const {
+  listarMetasVendedor,
+  guardarMetaVendedor,
+  mapMetaRow,
+  buildPeriodoFecha,
+} = require('../models/vendedorMeta');
 
 const router = express.Router();
 
@@ -33,7 +39,7 @@ function requireAdmin(req, res, next) {
 router.use(requireAuth, requireAdmin);
 
 function normalizeText(value) {
-  return String(value ?? '').trim();
+  return String(value ? '').trim();
 }
 
 function cleanCode(value) {
@@ -393,6 +399,29 @@ function mapVendorRow(row) {
     cod_vendedor: String(row.cod_vendedor || '').trim(),
     tipo: String(row.tipo || '').trim().toUpperCase(),
   };
+}
+
+function normalizeMetaPayload(body) {
+  return {
+    usuario_id: asNumber(body.usuario_id, null),
+    anio: asNumber(body.anio, null),
+    mes: asNumber(body.mes, null),
+    meta: asNumber(body.meta, null),
+    tipo_periodo: normalizeKey(body.tipo_periodo) === 'anual' ? 'anual' : 'mensual',
+    activo: asBoolean(body.activo, true),
+    observacion: normalizeText(body.observacion),
+  };
+}
+
+async function loadVendedorMetaById(conn, metaId) {
+  const [rows] = await conn.query(
+    `SELECT id, usuario_id, fecha, meta, tipo_periodo, activo, observacion
+     FROM vendedor_meta
+     WHERE id = ?
+     LIMIT 1`,
+    [metaId]
+  );
+  return rows[0] ? mapMetaRow(rows[0]) : null;
 }
 
 async function loadUsers(conn, userId = null) {
@@ -838,7 +867,7 @@ async function syncUserMenus(conn, userId, menus) {
 }
 
 function assertSelfAdminGuard(req, targetId, nextIsAdmin, confirmed) {
-  const currentId = Number(req.usuario?.id ?? req.usuario?.sub);
+  const currentId = Number(req.usuario?.id ? req.usuario?.sub);
   if (Number(targetId) === currentId && !nextIsAdmin && !confirmed) {
     const error = new Error('No puedes quitarte permisos de administración sin confirmación');
     error.status = 400;
@@ -938,7 +967,7 @@ router.post('/usuarios', async (req, res) => {
     res.status(201).json({
       ok: true,
       data: usuario,
-      warning: password ? null : 'Usuario creado inactivo hasta definir contraseña segura',
+      warning: password ? null : 'Usuario creado inactivo hasta definir contrase�a segura',
     });
   } catch (error) {
     console.error('[ADMIN] POST /usuarios:', error);
@@ -1700,7 +1729,7 @@ router.put('/usuarios/:id/perfiles', async (req, res) => {
         throw error;
       }
 
-      const requested = await resolveProfiles(conn, req.body.perfiles ?? req.body.perfil_ids ?? req.body.profiles);
+      const requested = await resolveProfiles(conn, req.body.perfiles ? req.body.perfil_ids ? req.body.profiles);
       const basePerfil = await loadBaseProfileByArea(conn, current.area);
       const requestedIds = new Set(requested.map(perfil => Number(perfil.id)));
       if (basePerfil) {
@@ -1817,7 +1846,7 @@ router.put('/usuarios/:id/menus', async (req, res) => {
       }
 
       const menus = await resolveMenus(conn, req.body.menus);
-      const currentId = Number(req.usuario?.id ?? req.usuario?.sub);
+      const currentId = Number(req.usuario?.id ? req.usuario?.sub);
       const keepsAdminMenu = menus.some(menu => normalizeKey(menu.codigo) === ADMIN_MENU_CODE);
 
       if (Number(userId) === currentId && !keepsAdminMenu && !confirmed) {
@@ -1889,7 +1918,7 @@ router.delete('/usuarios/:id/menus/:menuId', async (req, res) => {
         throw error;
       }
 
-      const currentId = Number(req.usuario?.id ?? req.usuario?.sub);
+      const currentId = Number(req.usuario?.id ? req.usuario?.sub);
       if (Number(userId) === currentId && normalizeKey(menu.codigo) === ADMIN_MENU_CODE) {
         const confirmed = asBoolean(req.body?.confirmar, false) || asBoolean(req.body?.force, false);
         if (!confirmed) {
@@ -2048,6 +2077,174 @@ router.delete('/usuarios/:id/vendedores/:cod', async (req, res) => {
   } catch (error) {
     console.error('[ADMIN] DELETE /usuarios/:id/vendedores/:cod:', error);
     res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al quitar vendedor' });
+  }
+});
+
+router.get('/vendedor-metas', async (req, res) => {
+  try {
+    const metas = await withConnection(conn => listarMetasVendedor({
+      usuario_id: req.query.usuario_id,
+      anio: req.query.anio,
+      mes: req.query.mes,
+      tipo_periodo: req.query.tipo_periodo,
+      activo: req.query.activo,
+    }, conn));
+
+    res.json({ ok: true, data: metas });
+  } catch (error) {
+    console.error('[ADMIN] GET /vendedor-metas:', error);
+    res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al obtener metas de vendedor' });
+  }
+});
+
+router.get('/vendedor-metas/:id', async (req, res) => {
+  try {
+    const metaId = requireId(req.params.id, 'Meta');
+    const meta = await withConnection(conn => loadVendedorMetaById(conn, metaId));
+    if (!meta) {
+      return res.status(404).json({ ok: false, error: 'Meta no encontrada' });
+    }
+    res.json({ ok: true, data: meta });
+  } catch (error) {
+    console.error('[ADMIN] GET /vendedor-metas/:id:', error);
+    res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al obtener meta' });
+  }
+});
+
+router.post('/vendedor-metas', async (req, res) => {
+  try {
+    const payload = normalizeMetaPayload(req.body);
+    const meta = await withTransaction(async conn => {
+      const usuario = await loadUser(conn, payload.usuario_id);
+      if (!usuario) {
+        const error = new Error('Usuario no encontrado');
+        error.status = 404;
+        throw error;
+      }
+      return guardarMetaVendedor(payload, conn);
+    });
+
+    res.status(201).json({ ok: true, data: meta });
+  } catch (error) {
+    console.error('[ADMIN] POST /vendedor-metas:', error);
+    res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al crear meta' });
+  }
+});
+
+router.put('/vendedor-metas', async (req, res) => {
+  try {
+    const payload = normalizeMetaPayload(req.body);
+    const meta = await withTransaction(async conn => {
+      const usuario = await loadUser(conn, payload.usuario_id);
+      if (!usuario) {
+        const error = new Error('Usuario no encontrado');
+        error.status = 404;
+        throw error;
+      }
+      return guardarMetaVendedor(payload, conn);
+    });
+
+    res.json({ ok: true, data: meta });
+  } catch (error) {
+    console.error('[ADMIN] PUT /vendedor-metas:', error);
+    res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al guardar meta' });
+  }
+});
+
+router.put('/vendedor-metas/:id', async (req, res) => {
+  try {
+    const metaId = requireId(req.params.id, 'Meta');
+    const payload = normalizeMetaPayload(req.body);
+    const meta = await withTransaction(async conn => {
+      const current = await loadVendedorMetaById(conn, metaId);
+      if (!current) {
+        const error = new Error('Meta no encontrada');
+        error.status = 404;
+        throw error;
+      }
+
+      const [rows] = await conn.query(
+        `SELECT id
+         FROM usuario
+         WHERE id = ?
+         LIMIT 1`,
+        [current.usuario_id]
+      );
+      if (!rows.length) {
+        const error = new Error('Usuario no encontrado');
+        error.status = 404;
+        throw error;
+      }
+
+      const currentFecha = String(current.fecha || '').slice(0, 10);
+      const currentAnio = Number(currentFecha.slice(0, 4)) || new Date().getFullYear();
+      const currentMes = Number(currentFecha.slice(5, 7)) || 1;
+      const fecha = buildPeriodoFecha(
+        Number.isFinite(payload.anio) ? payload.anio : currentAnio,
+        Number.isFinite(payload.mes) ? payload.mes : currentMes,
+        payload.tipo_periodo || current.tipo_periodo || 'mensual'
+      );
+
+      await conn.query(
+        `UPDATE vendedor_meta
+         SET fecha = ?, meta = ?, tipo_periodo = ?, activo = ?, observacion = ?
+         WHERE id = ?`,
+        [
+          fecha,
+          Number.isFinite(payload.meta) ? payload.meta : current.meta,
+          payload.tipo_periodo || current.tipo_periodo || 'mensual',
+          payload.activo ? 1 : 0,
+          payload.observacion || null,
+          metaId,
+        ]
+      );
+      return loadVendedorMetaById(conn, metaId);
+    });
+
+    res.json({ ok: true, data: meta });
+  } catch (error) {
+    console.error('[ADMIN] PUT /vendedor-metas/:id:', error);
+    res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al actualizar meta' });
+  }
+});
+
+router.patch('/vendedor-metas/:id/activar', async (req, res) => {
+  try {
+    const metaId = requireId(req.params.id, 'Meta');
+    const meta = await withTransaction(async conn => {
+      const current = await loadVendedorMetaById(conn, metaId);
+      if (!current) {
+        const error = new Error('Meta no encontrada');
+        error.status = 404;
+        throw error;
+      }
+      await conn.query('UPDATE vendedor_meta SET activo = 1 WHERE id = ?', [metaId]);
+      return loadVendedorMetaById(conn, metaId);
+    });
+    res.json({ ok: true, data: meta });
+  } catch (error) {
+    console.error('[ADMIN] PATCH /vendedor-metas/:id/activar:', error);
+    res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al activar meta' });
+  }
+});
+
+router.patch('/vendedor-metas/:id/desactivar', async (req, res) => {
+  try {
+    const metaId = requireId(req.params.id, 'Meta');
+    const meta = await withTransaction(async conn => {
+      const current = await loadVendedorMetaById(conn, metaId);
+      if (!current) {
+        const error = new Error('Meta no encontrada');
+        error.status = 404;
+        throw error;
+      }
+      await conn.query('UPDATE vendedor_meta SET activo = 0 WHERE id = ?', [metaId]);
+      return loadVendedorMetaById(conn, metaId);
+    });
+    res.json({ ok: true, data: meta });
+  } catch (error) {
+    console.error('[ADMIN] PATCH /vendedor-metas/:id/desactivar:', error);
+    res.status(error.status || 500).json({ ok: false, error: error.message || 'Error al desactivar meta' });
   }
 });
 

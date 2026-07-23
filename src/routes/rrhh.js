@@ -45,7 +45,7 @@ router.get('/confirmaciones', async (req, res) => {
     const confirmaciones = await listarConfirmaciones({ mes, anio });
     res.json({ ok: true, confirmaciones });
   } catch (err) {
-    const status = err.message.includes('inválid') || err.message.includes('inválido') ? 400 : 500;
+    const status = err.message.includes('inv�lid') || err.message.includes('inv�lido') ? 400 : 500;
     console.error('[GET /api/rrhh/confirmaciones]', err.message);
     res.status(status).json({ ok: false, error: status === 400 ? err.message : 'Error al obtener confirmaciones' });
   }
@@ -73,7 +73,7 @@ router.get('/confirmaciones/:id/pdf', async (req, res) => {
     );
     fs.createReadStream(rutaAbsoluta).pipe(res);
   } catch (err) {
-    const status = err.message.includes('inválid') || err.message.includes('inválido') ? 400 : 500;
+    const status = err.message.includes('inv�lid') || err.message.includes('inv�lido') ? 400 : 500;
     console.error('[GET /api/rrhh/confirmaciones/:id/pdf]', err.message);
     res.status(status).json({ ok: false, error: status === 400 ? err.message : 'Error al servir el PDF' });
   }

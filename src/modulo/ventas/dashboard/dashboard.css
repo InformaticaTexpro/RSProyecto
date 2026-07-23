@@ -253,6 +253,7 @@ html, body { height: 100%; font-family: var(--font-secondary,'Open Sans',sans-se
 .kpi-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--color-gray-dark,#6B7280); }
 .kpi-valor { font-size:1.4rem; font-weight:700; color:var(--color-black,#1A1D23); }
 .kpi-valor--sm { font-size:1.1rem; }
+.kpi-meta-note { font-size:.74rem; line-height:1.25; color:var(--color-gray-dark,#6B7280); }
 .kpi-progreso-header { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
 .progreso-barra-bg { width:100%; height:10px; background:var(--color-gray-light,#E8EAF0); border-radius:100px; overflow:hidden; }
 .progreso-barra-fill { height:100%; border-radius:100px; transition:width .6s cubic-bezier(.4,0,.2,1),background .3s; background:var(--color-primary,#00E2A7); }

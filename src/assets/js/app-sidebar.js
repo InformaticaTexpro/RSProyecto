@@ -2,8 +2,8 @@
 
 /**
  * app-sidebar.js
- * Sidebar central basado en catálogo completo de menús activos.
- * - Todos los módulos se muestran.
+ * Sidebar central basado en cat�logo completo de men�s activos.
+ * - Todos los m�dulos se muestran.
  * - El acceso se controla al entrar, no al visualizar.
  */
 (function () {
@@ -11,7 +11,7 @@
 
   const NO_ACCESS_URL = '/src/modulo/varios/sin-acceso/index.html';
   const EXTRA_ITEMS = [
-    { id: 'extra-alertas', codigo: 'alertas', nombre: 'Alertas', url: '/src/modulo/varios/alertas/index.html', icono: '🔔', grupo: 'General', orden: 1, extra: true },
+    { id: 'extra-alertas', codigo: 'alertas', nombre: 'Alertas', url: '/src/modulo/varios/alertas/index.html', icono: '??', grupo: 'General', orden: 1, extra: true },
   ];
 
   function normalizarTexto(valor) {
@@ -37,13 +37,13 @@
   function normalizarMenus(menus) {
     return (menus || [])
       .map(menu => ({
-        id: menu?.id ?? null,
+        id: menu?.id ? null,
         codigo: normalizarTexto(menu?.codigo),
         nombre: String(menu?.nombre || '').trim(),
         url: normalizarUrl(menu?.url),
-        icono: String(menu?.icono || '').trim() || '•',
+        icono: String(menu?.icono || '').trim() || '"',
         grupo: String(menu?.grupo || 'General').trim() || 'General',
-        orden: Number(menu?.orden ?? 0) || 0,
+        orden: Number(menu?.orden ? 0) || 0,
         extra: Boolean(menu?.extra),
       }))
       .filter(menu => menu.id !== null && menu.nombre && menu.url);
@@ -61,9 +61,9 @@
           codigo: normalizarTexto(item.codigo),
           nombre: String(item.nombre || '').trim(),
           url,
-          icono: String(item.icono || '').trim() || '•',
+          icono: String(item.icono || '').trim() || '�',
           grupo: String(item.grupo || 'General').trim() || 'General',
-          orden: Number(item.orden ?? 0) || 0,
+          orden: Number(item.orden ? 0) || 0,
           extra: true,
         });
       }
@@ -81,7 +81,7 @@
         grupos.set(nombreGrupo, {
           nombre: nombreGrupo,
           orden: Number.isFinite(menu.orden) ? menu.orden : 0,
-          icono: menu.icono || '📁',
+          icono: menu.icono || '??',
           items: [],
         });
       }
@@ -136,7 +136,7 @@
 
   function urlSinAcceso(menu, fromUrl) {
     const params = new URLSearchParams({
-      modulo: menu?.nombre || 'Módulo restringido',
+      modulo: menu?.nombre || 'M�dulo restringido',
       from: normalizarUrl(fromUrl || rutaActual()),
     });
     return `${NO_ACCESS_URL}?${params.toString()}`;
@@ -238,9 +238,9 @@
     return `
       <div class="nav-module ${abierto ? 'is-open' : ''}">
         <button class="nav-module-btn ${abierto ? 'is-open' : ''}" type="button" aria-expanded="${abierto ? 'true' : 'false'}">
-          <span class="nav-module-icon">${grupo.icono || '📁'}</span>
+          <span class="nav-module-icon">${grupo.icono || '??'}</span>
           <span class="nav-module-label">${grupo.nombre}</span>
-          <span class="nav-module-chevron">▶</span>
+          <span class="nav-module-chevron">?</span>
         </button>
         <div class="nav-subitems">
           ${grupo.items.map(item => {
@@ -250,7 +250,7 @@
               <a class="nav-subitem ${itemActivo(item) ? 'active' : ''} ${permitido ? '' : 'is-locked'}" href="${href}">
                 <span>${item.icono}</span>
                 <span class="nav-label">${item.nombre}</span>
-                ${permitido ? '' : '<span class="nav-module-lock" title="Sin acceso">🔒</span>'}
+                ${permitido ? '' : '<span class="nav-module-lock" title="Sin acceso">=</span>'}
                 ${item.extra ? '<span class="nav-extra-badge" id="navBadgeAlertas" style="display:none">0</span>' : ''}
               </a>
             `;
@@ -272,12 +272,12 @@
     const grupos = agruparMenus(catalogo);
 
     if (!grupos.length) {
-      nav.innerHTML = '<div class="nav-empty">Sin menús activos</div>';
+      nav.innerHTML = '<div class="nav-empty">Sin men�s activos</div>';
       return;
     }
 
     nav.innerHTML = `
-      <span class="nav-section-title">MENÚ</span>
+      <span class="nav-section-title">MEN�</span>
       ${grupos.map(grupo => renderGrupo(grupo, indicePermisos)).join('')}
     `;
 
@@ -314,12 +314,12 @@
     const nav = document.getElementById('sidebarNav');
     if (nav) {
       inyectarEstilos();
-      nav.innerHTML = '<div class="nav-loading">Cargando menú...</div>';
+      nav.innerHTML = '<div class="nav-loading">Cargando men�...</div>';
     }
 
     const data = await obtenerContextoSidebar();
     if (!data?.user) {
-      if (nav) nav.innerHTML = '<div class="nav-empty">Sin sesión activa</div>';
+      if (nav) nav.innerHTML = '<div class="nav-empty">Sin sesi�n activa</div>';
       return;
     }
 

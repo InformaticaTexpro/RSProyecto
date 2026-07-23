@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Texpro - Administración</title>
+  <title>Texpro - Administraci�n</title>
   <link rel="icon" type="image/jpg" href="../../../assets/images/Isotipo-TEXPRO_fondo_blanco.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -16,7 +16,7 @@
     <div class="sidebar-header">
       <img src="../../../assets/images/Isotipo-TEXPRO_fondo_blanco.png" alt="Texpro" class="sidebar-logo" onerror="this.style.display='none'" />
       <span class="sidebar-brand">TEXPRO</span>
-      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar menú">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar men�">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
     </div>
@@ -29,9 +29,9 @@
           <span class="user-area" id="userArea"></span>
         </div>
       </div>
-      <button class="btn-logout" id="btnLogout" title="Cerrar sesión">
+      <button class="btn-logout" id="btnLogout" title="Cerrar sesi�n">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-        <span class="btn-logout-text">Cerrar sesión</span>
+        <span class="btn-logout-text">Cerrar sesi�n</span>
       </button>
     </div>
   </aside>
@@ -39,12 +39,12 @@
   <div class="main-wrapper" id="mainWrapper">
     <header class="main-header">
       <div class="header-left">
-        <button class="header-menu-btn" id="headerMenuBtn" aria-label="Menú móvil">
+        <button class="header-menu-btn" id="headerMenuBtn" aria-label="Men� m�vil">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
         </button>
         <div class="header-copy">
-          <h1 class="header-title">Panel de Administración</h1>
-          <p class="header-subtitle">Gestión centralizada de usuarios, menús, perfiles y accesos heredados.</p>
+          <h1 class="header-title">Panel de Administraci�n</h1>
+          <p class="header-subtitle">Gesti�n centralizada de usuarios, men�s, perfiles y accesos heredados.</p>
         </div>
       </div>
       <div class="header-right">
@@ -60,13 +60,13 @@
     <main class="main-content">
       <section class="admin-hero">
         <div class="admin-hero__copy">
-          <span class="admin-kicker">Sistema / Administración</span>
-          <h2>Administración</h2>
-          <p>Gestión real de usuarios, módulos, permisos por menú y asignación usuario ↔ vendedor.</p>
+          <span class="admin-kicker">Sistema / Administraci�n</span>
+          <h2>Administraci�n</h2>
+          <p>Gesti�n real de usuarios, m�dulos, permisos por men� y asignaci�n usuario ?? vendedor.</p>
         </div>
         <div class="admin-hero__status">
           <span class="admin-status-pill">Datos reales</span>
-          <span class="admin-status-note" id="adminStatusNote">Cargando información del sistema...</span>
+          <span class="admin-status-note" id="adminStatusNote">Cargando informaci�n del sistema...</span>
         </div>
       </section>
 
@@ -74,15 +74,16 @@
 
       <section class="admin-kpis-grid" id="adminKpis"></section>
 
-      <nav class="admin-tabs" id="adminTabs" aria-label="Secciones de administración">
+      <nav class="admin-tabs" id="adminTabs" aria-label="Secciones de administraci�n">
         <button class="admin-tab is-active" data-tab="resumen" type="button">Resumen</button>
         <button class="admin-tab" data-tab="usuarios" type="button">Usuarios</button>
         <button class="admin-tab" data-tab="permisos" type="button">Permisos por usuario</button>
         <button class="admin-tab" data-tab="perfiles" type="button">Perfiles</button>
-        <button class="admin-tab" data-tab="menus" type="button">Menús y módulos</button>
-        <button class="admin-tab" data-tab="areas" type="button">Áreas</button>
-        <button class="admin-tab" data-tab="asignaciones" type="button">Asignación vendedores</button>
-        <button class="admin-tab" data-tab="auditoria" type="button">Auditoría</button>
+        <button class="admin-tab" data-tab="menus" type="button">Men�s y m�dulos</button>
+        <button class="admin-tab" data-tab="areas" type="button">�??reas</button>
+        <button class="admin-tab" data-tab="asignaciones" type="button">Asignaci�n vendedores</button>
+        <button class="admin-tab" data-tab="metas" type="button">Metas vendedores</button>
+        <button class="admin-tab" data-tab="auditoria" type="button">Auditor�a</button>
       </nav>
 
       <section class="admin-panels">
@@ -91,32 +92,32 @@
             <div class="panel-card__header">
               <div>
                 <h3>Resumen general</h3>
-                <p>Vista ejecutiva del estado actual del módulo y accesos más importantes.</p>
+                <p>Vista ejecutiva del estado actual del m�dulo y accesos m�s importantes.</p>
               </div>
               <div class="admin-summary-updated">
-                <span class="summary-chip">Última carga: <strong id="adminLastUpdated">—</strong></span>
+                <span class="summary-chip">�ltima carga: <strong id="adminLastUpdated">�?</strong></span>
               </div>
             </div>
             <div id="adminSummaryGrid" class="admin-summary-grid"></div>
             <div class="admin-summary-actions">
               <button class="btn-primary" type="button" data-quick-action="create-user">Nuevo usuario</button>
               <button class="btn-secondary" type="button" data-quick-action="create-profile">Nuevo perfil</button>
-              <button class="btn-secondary" type="button" data-quick-action="create-menu">Nuevo menú</button>
-              <button class="btn-secondary" type="button" data-quick-action="create-area">Nueva área</button>
-              <button class="btn-secondary" type="button" data-quick-action="area-access">Ir a áreas</button>
+              <button class="btn-secondary" type="button" data-quick-action="create-menu">Nuevo men�</button>
+              <button class="btn-secondary" type="button" data-quick-action="create-area">Nueva �rea</button>
+              <button class="btn-secondary" type="button" data-quick-action="area-access">Ir a �reas</button>
             </div>
             <div class="admin-summary-panels">
               <article class="summary-panel" id="adminWarnings">
                 <div class="summary-panel__header">
-                  <h4>Alertas de configuración</h4>
-                  <span class="summary-panel__tag">Automático</span>
+                  <h4>Alertas de configuraci�n</h4>
+                  <span class="summary-panel__tag">Autom�tico</span>
                 </div>
                 <div class="summary-panel__body" id="adminWarningsList"></div>
               </article>
               <article class="summary-panel" id="adminLatestChanges">
                 <div class="summary-panel__header">
                   <h4>Cambios recientes</h4>
-                  <span class="summary-panel__tag">Auditoría</span>
+                  <span class="summary-panel__tag">Auditor�a</span>
                 </div>
                 <div class="summary-panel__body" id="adminLatestChangesList"></div>
               </article>
@@ -129,12 +130,12 @@
             <div class="panel-card__header">
               <div>
                 <h3>Usuarios</h3>
-                <p>Listado real de usuarios, estado, menús y vendedores asociados.</p>
+                <p>Listado real de usuarios, estado, men�s y vendedores asociados.</p>
               </div>
               <button class="btn-primary" id="btnNuevoUsuario" type="button">Nuevo usuario</button>
             </div>
             <div class="toolbar-grid">
-              <input class="input-control" id="userSearch" type="search" placeholder="Buscar por nombre, email o código" />
+              <input class="input-control" id="userSearch" type="search" placeholder="Buscar por nombre, email o c�digo" />
               <select class="input-control" id="userAreaFilter"></select>
               <select class="input-control" id="userStatusFilter">
                 <option value="">Todos los estados</option>
@@ -153,13 +154,13 @@
                   <tr>
                     <th>Nombre</th>
                     <th>Email</th>
-                    <th>Código</th>
-                    <th>Área</th>
+                    <th>C�digo</th>
+                    <th>�??rea</th>
                     <th>Perfil principal</th>
                     <th>Estado</th>
                     <th>Admin</th>
-                    <th>Menús asignados</th>
-                    <th>Última actualización</th>
+                    <th>Men�s asignados</th>
+                    <th>�ltima actualizaci�n</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -174,7 +175,7 @@
             <div class="panel-card__header">
               <div>
                 <h3>Permisos por usuario</h3>
-                <p>Selecciona un usuario y ajusta sus menús directos. Los perfiles se gestionan aparte.</p>
+                <p>Selecciona un usuario y ajusta sus men�s directos. Los perfiles se gestionan aparte.</p>
               </div>
             </div>
             <div class="form-section-note admin-explainer">
@@ -191,10 +192,10 @@
               <button class="btn-secondary" id="permSelectAll" type="button">Seleccionar todos</button>
               <button class="btn-secondary" id="permClearAll" type="button">Quitar todos</button>
               <select class="input-control" id="permAreaSelect"></select>
-              <button class="btn-secondary" id="permRestoreArea" type="button">Aplicar sugeridos por área</button>
+              <button class="btn-secondary" id="permRestoreArea" type="button">Aplicar sugeridos por �rea</button>
               <button class="btn-primary" id="permSave" type="button">Guardar cambios</button>
             </div>
-            <div class="inline-help">Busca por nombre, correo o área. Marca solo accesos especiales; no repitas menús que ya vienen desde el perfil.</div>
+            <div class="inline-help">Busca por nombre, correo o �rea. Marca solo accesos especiales; no repitas men�s que ya vienen desde el perfil.</div>
             <div class="permission-grid" id="permGroups"></div>
           </div>
         </section>
@@ -204,23 +205,23 @@
             <div class="panel-card__header">
               <div>
                 <h3>Perfiles</h3>
-                <p>Gestiona perfiles base por área, asigna menús a perfiles y perfiles a usuarios.</p>
+                <p>Gestiona perfiles base por �rea, asigna men�s a perfiles y perfiles a usuarios.</p>
               </div>
               <button class="btn-primary" id="btnNuevoPerfil" type="button">Nuevo perfil</button>
             </div>
             <div class="form-section-note admin-explainer">
-              Los menús incluidos se heredan en todos los usuarios con este perfil. Si un perfil queda vacío, se puede guardar, pero los usuarios no recibirán accesos desde él.
+              Los men�s incluidos se heredan en todos los usuarios con este perfil. Si un perfil queda vac�o, se puede guardar, pero los usuarios no recibir�n accesos desde �l.
             </div>
             <div class="table-scroll">
               <table class="admin-table">
                 <thead>
                   <tr>
-                    <th>Código</th>
+                    <th>C�digo</th>
                     <th>Nombre</th>
-                    <th>Área</th>
+                    <th>�??rea</th>
                     <th>Base</th>
                     <th>Activo</th>
-                    <th>Menús</th>
+                    <th>Men�s</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -231,8 +232,8 @@
               <article class="profile-assignment-card">
                 <div class="profile-assignment-card__header">
                   <div>
-                    <h4>Menús del perfil</h4>
-                    <p>Los menús se heredan a todos los usuarios asociados al perfil.</p>
+                    <h4>Men�s del perfil</h4>
+                    <p>Los men�s se heredan a todos los usuarios asociados al perfil.</p>
                   </div>
                   <div class="permission-summary">
                     <span class="summary-chip">Asignados: <strong id="profileMenuAllowedCount">0</strong></span>
@@ -244,14 +245,14 @@
                   <button class="btn-secondary" id="profileMenuClearAll" type="button">Quitar todos</button>
                   <button class="btn-primary" id="profileMenuSave" type="button">Guardar cambios</button>
                 </div>
-                <div class="inline-help" id="profileMenuNote">Selecciona los módulos que heredarán todos los usuarios con este perfil.</div>
+                <div class="inline-help" id="profileMenuNote">Selecciona los m�dulos que heredar�n todos los usuarios con este perfil.</div>
                 <div class="permission-grid" id="profileMenuGroups"></div>
               </article>
               <article class="profile-assignment-card">
                 <div class="profile-assignment-card__header">
                   <div>
                     <h4>Perfiles por usuario</h4>
-                    <p>Asigna perfiles manuales sin quitar el perfil base automático por área.</p>
+                    <p>Asigna perfiles manuales sin quitar el perfil base autom�tico por �rea.</p>
                   </div>
                   <div class="permission-summary">
                     <span class="summary-chip">Asignados: <strong id="profileUserAssignedCount">0</strong></span>
@@ -260,7 +261,7 @@
                 <div class="permission-topbar">
                   <select class="input-control" id="profileUserSelect"></select>
                 </div>
-                <div class="inline-help">Selecciona uno o más perfiles para entregar accesos base. El perfil del área se mantiene como base automática.</div>
+                <div class="inline-help">Selecciona uno o m�s perfiles para entregar accesos base. El perfil del �rea se mantiene como base autom�tica.</div>
                 <div class="permission-actions">
                   <button class="btn-primary" id="profileUserSave" type="button">Guardar perfiles</button>
                 </div>
@@ -274,13 +275,13 @@
           <div class="panel-card panel-card--split">
             <div class="panel-card__header">
               <div>
-                <h3>Menús y módulos</h3>
-                <p>Catálogo real editable para preparar el sidebar corporativo.</p>
+                <h3>Men�s y m�dulos</h3>
+                <p>Cat�logo real editable para preparar el sidebar corporativo.</p>
               </div>
-              <button class="btn-primary" id="btnNuevoMenu" type="button">Nuevo menú</button>
+              <button class="btn-primary" id="btnNuevoMenu" type="button">Nuevo men�</button>
             </div>
             <div class="form-section-note admin-explainer">
-              Define nombres visibles, códigos limpios, URL válidas y grupos coherentes para que el sidebar se mantenga ordenado y sin datos basura.
+              Define nombres visibles, c�digos limpios, URL v�lidas y grupos coherentes para que el sidebar se mantenga ordenado y sin datos basura.
             </div>
             <div class="menus-layout">
               <div class="table-scroll">
@@ -289,7 +290,7 @@
                   <tr>
                     <th>Icono</th>
                     <th>Nombre</th>
-                    <th>Código</th>
+                    <th>C�digo</th>
                     <th>Grupo</th>
                     <th>URL</th>
                     <th>Orden</th>
@@ -302,7 +303,7 @@
               </div>
               <aside class="preview-card">
                 <div class="preview-card__header">
-                  <h4>Previsualización sidebar</h4>
+                  <h4>Previsualizaci�n sidebar</h4>
                   <span class="preview-card__tag">Real</span>
                 </div>
                 <div id="menusPreview" class="sidebar-preview"></div>
@@ -315,20 +316,20 @@
           <div class="panel-card">
             <div class="panel-card__header">
               <div>
-                <h3>Áreas</h3>
-                <p>Catálogo maestro de áreas con perfil base, estado y acceso rápido por usuario.</p>
+                <h3>�??reas</h3>
+                <p>Cat�logo maestro de �reas con perfil base, estado y acceso r�pido por usuario.</p>
               </div>
-              <button class="btn-primary" id="btnNuevaArea" type="button">Crear área</button>
+              <button class="btn-primary" id="btnNuevaArea" type="button">Crear �rea</button>
             </div>
             <div class="form-section-note admin-explainer">
-              Revisa los usuarios afectados antes de aplicar sugeridos. Esta acción agrega accesos, pero no elimina permisos directos ni perfiles.
+              Revisa los usuarios afectados antes de aplicar sugeridos. Esta acci�n agrega accesos, pero no elimina permisos directos ni perfiles.
             </div>
             <div class="table-scroll">
               <table class="admin-table">
                 <thead>
                   <tr>
                     <th>Nombre</th>
-                    <th>Código</th>
+                    <th>C�digo</th>
                     <th>Perfil base</th>
                     <th>Usuarios</th>
                     <th>Estado</th>
@@ -341,16 +342,16 @@
             <article class="panel-card panel-card--split area-assign-card">
               <div class="panel-card__header">
                 <div>
-                  <h3>Aplicar perfil a usuarios del área</h3>
-                  <p>Selecciona un área y un perfil para asignarlo sin quitar perfiles existentes.</p>
+                  <h3>Aplicar perfil a usuarios del �rea</h3>
+                  <p>Selecciona un �rea y un perfil para asignarlo sin quitar perfiles existentes.</p>
                 </div>
               </div>
               <div class="toolbar-grid">
                 <select class="input-control" id="areaApplySelect"></select>
                 <select class="input-control" id="areaApplyProfileSelect"></select>
-                <button class="btn-primary" id="areaApplyButton" type="button">Aplicar perfil al área</button>
+                <button class="btn-primary" id="areaApplyButton" type="button">Aplicar perfil al �rea</button>
               </div>
-              <div class="inline-help" id="areaApplyBaseHint">El área define el perfil base sugerido para el usuario.</div>
+              <div class="inline-help" id="areaApplyBaseHint">El �rea define el perfil base sugerido para el usuario.</div>
               <div class="area-preview-grid" id="areaApplyPreview"></div>
             </article>
           </div>
@@ -360,21 +361,21 @@
           <div class="panel-card panel-card--split">
             <div class="panel-card__header">
               <div>
-                <h3>Asignación vendedores</h3>
-                <p>Relaciones reales entre usuario local y códigos de vendedor.</p>
+                <h3>Asignaci�n vendedores</h3>
+                <p>Relaciones reales entre usuario local y c�digos de vendedor.</p>
               </div>
             </div>
             <div class="form-section-note admin-explainer">
-              El código vendedor debe ser comercial y único por usuario. Usa principal, compartido o supervisor según el tipo de acceso de consulta.
+              El c�digo vendedor debe ser comercial y �nico por usuario. Usa principal, compartido o supervisor seg�n el tipo de acceso de consulta.
             </div>
             <div class="assignment-form" id="assignmentForm">
               <div class="field-group">
                 <select class="input-control" id="assignUserSelect"></select>
-                <small class="field-help">Usuario al que se asociará el código vendedor.</small>
+                <small class="field-help">Usuario al que se asociar� el c�digo vendedor.</small>
               </div>
               <div class="field-group">
-                <input class="input-control" id="assignVendorCode" type="text" placeholder="Código vendedor" />
-                <small class="field-help">Código comercial usado para consultar ventas. Ejemplo: 454, 496, 629.</small>
+                <input class="input-control" id="assignVendorCode" type="text" placeholder="C�digo vendedor" />
+                <small class="field-help">C�digo comercial usado para consultar ventas. Ejemplo: 454, 496, 629.</small>
               </div>
               <div class="field-group">
                 <select class="input-control" id="assignVendorType">
@@ -382,16 +383,16 @@
                 <option value="C">Compartido</option>
                 <option value="S">Supervisor</option>
                 </select>
-                <small class="field-help">Principal: ventas propias. Compartido: acceso a ventas compartidas. Supervisor: visualización ampliada si aplica.</small>
+                <small class="field-help">Principal: ventas propias. Compartido: acceso a ventas compartidas. Supervisor: visualizaci�n ampliada si aplica.</small>
               </div>
-              <button class="btn-primary" id="btnAddAssignment" type="button">Agregar relación</button>
+              <button class="btn-primary" id="btnAddAssignment" type="button">Agregar relaci�n</button>
             </div>
             <div class="table-scroll">
               <table class="admin-table">
                 <thead>
                   <tr>
                     <th>Usuario</th>
-                    <th>Código vendedor</th>
+                    <th>C�digo vendedor</th>
                     <th>Tipo</th>
                     <th>Acciones</th>
                   </tr>
@@ -402,12 +403,78 @@
           </div>
         </section>
 
+        <section class="admin-panel" data-panel="metas" hidden>
+          <div class="panel-card panel-card--split">
+            <div class="panel-card__header">
+              <div>
+                <h3>Metas vendedores</h3>
+                <p>Define metas mensuales o anuales por vendedor. La meta mensual siempre tiene prioridad sobre la anual del mismo per�odo.</p>
+              </div>
+              <button class="btn-primary" id="btnNuevaMeta" type="button">Nueva meta</button>
+            </div>
+            <div class="form-section-note admin-explainer">
+              Usa la meta anual como respaldo. Si existe una meta mensual para el mes consultado, esa es la que se muestra en KPIs, dashboard y confirmaciones.
+            </div>
+            <div class="toolbar-grid">
+              <select class="input-control" id="metaUserSelect"></select>
+              <select class="input-control" id="metaTipoSelect">
+                <option value="mensual">Mensual</option>
+                <option value="anual">Anual</option>
+              </select>
+              <input class="input-control" id="metaAnioInput" type="number" min="2020" max="2100" step="1" placeholder="A�o" />
+              <select class="input-control" id="metaMesInput">
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+              <input class="input-control" id="metaValorInput" type="number" min="0" step="1" placeholder="Meta" />
+              <input class="input-control" id="metaObservacionInput" type="text" maxlength="255" placeholder="Observaci�n opcional" />
+            </div>
+            <div class="meta-preview" id="metaPreview" aria-live="polite">
+              <div class="meta-preview__eyebrow">Vista previa</div>
+              <div class="meta-preview__main" id="metaPreviewMain">Selecciona una meta para ver su efecto mensual.</div>
+            </div>
+            <div class="permission-actions">
+              <button class="btn-secondary" id="btnLimpiarMeta" type="button">Limpiar formulario</button>
+              <button class="btn-primary" id="btnGuardarMeta" type="button">Guardar meta</button>
+            </div>
+            </div>
+            <div class="table-scroll">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th>�??rea</th>
+                    <th>Per�odo</th>
+                    <th>Fecha</th>
+                    <th>Meta</th>
+                    <th>Meta mensual</th>
+                    <th>Estado</th>
+                    <th>Observaci�n</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="vendorMetasTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
         <section class="admin-panel" data-panel="auditoria" hidden>
           <div class="panel-card">
             <div class="panel-card__header">
               <div>
-                <h3>Auditoría / cambios recientes</h3>
-                <p id="auditSubtitle">Auditoría real pendiente de implementar.</p>
+                <h3>Auditor�a / cambios recientes</h3>
+                <p id="auditSubtitle">Auditor�a real pendiente de implementar.</p>
               </div>
             </div>
             <div id="auditTimeline" class="audit-timeline"></div>
@@ -421,11 +488,11 @@
     <div class="drawer">
       <div class="drawer__header">
         <div>
-          <span class="drawer__kicker">Administración</span>
+          <span class="drawer__kicker">Administraci�n</span>
           <h3 id="drawerTitle">Nuevo usuario</h3>
           <p id="drawerSubtitle">Formulario conectado a la API real.</p>
         </div>
-        <button class="drawer__close" id="drawerClose" type="button" aria-label="Cerrar">✖</button>
+        <button class="drawer__close" id="drawerClose" type="button" aria-label="Cerrar">?</button>
       </div>
       <div class="drawer__body" id="drawerBody"></div>
       <div class="drawer__footer">
@@ -441,6 +508,7 @@
 
   <script src="../../../assets/js/app-sidebar.js?v=1.0.0"></script>
   <script src="admin.js?v=1.0.0"></script>
+  <script src="vendedor-metas.js?v=1.0.0"></script>
 </body>
 </html>
 

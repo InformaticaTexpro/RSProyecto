@@ -1,22 +1,22 @@
 'use strict';
 
 /**
- * dashboard.js — RSProyecto Texpro
+ * dashboard.js � RSProyecto Texpro
  *
  * 2026-04-23: filtros client-side en tabla Ventas del Mes
- * 2026-04-24: módulo Alertas agregado al sidebar
- * 2026-04-24: fix(lint) — eliminada función setHTML no utilizada
- * 2026-06-04: fix — ruta alertas corregida a ../../alertas/index.html
- * 2026-06-08: fix — todas las rutas del sidebar corregidas a nueva estructura anidada
- * 2026-06-08: fix — eliminadas funciones del Panel Coordinador
- * 2026-06-08: feat — cartera: eliminadas cards Activos/Recuperados/SinCompras;
+ * 2026-04-24: m�dulo Alertas agregado al sidebar
+ * 2026-04-24: fix(lint) � eliminada funci�n setHTML no utilizada
+ * 2026-06-04: fix � ruta alertas corregida a ../../alertas/index.html
+ * 2026-06-08: fix � todas las rutas del sidebar corregidas a nueva estructura anidada
+ * 2026-06-08: fix � eliminadas funciones del Panel Coordinador
+ * 2026-06-08: feat � cartera: eliminadas cards Activos/Recuperados/SinCompras;
  *                    agregada card Activos Mes Actual (fija al mes real del servidor)
- * 2026-06-09: fix — agrega enlace Historial Cliente al sidebar
- * 2026-06-10: feat — cartera: 5 KPIs desde /api/cartera (Total, Activos, Inactivos, Nuevos,
+ * 2026-06-09: fix � agrega enlace Historial Cliente al sidebar
+ * 2026-06-10: feat � cartera: 5 KPIs desde /api/cartera (Total, Activos, Inactivos, Nuevos,
  *                    Recuperados); elimina lista-KPI redundante del HTML
- * 2026-06-11: fix — descuentos redondeados (sin decimales) en KPI global,
+ * 2026-06-11: fix � descuentos redondeados (sin decimales) en KPI global,
  *                    tabla vendedores y tabla ventas del mes
- * 2026-06-15: fix — sidebar estandarizado: Ventas → Ventas Asignadas, Historial → Historial Cliente
+ * 2026-06-15: fix � sidebar estandarizado: Ventas ? Ventas Asignadas, Historial ? Historial Cliente
  */
 
 (function () {
@@ -42,8 +42,15 @@
 
   const MESES_NOMBRE = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
+  function formatMetaDetalle(metaInfo) {
+    if (!metaInfo) return 'Sin meta asignada';
+    return metaInfo.tipo_periodo === 'anual'
+      ? `Meta anual aplicada a cada mes desde ${formatCLP(metaInfo.meta_original)}`
+      : 'Meta mensual espec�fica';
+  }
+
   function formatCLP(v) {
-    if (v == null || v === '') return '—';
+    if (v == null || v === '') return '�';
     return new Intl.NumberFormat('es-CL', { style:'currency', currency:'CLP', maximumFractionDigits:0 }).format(Number(v));
   }
 
@@ -58,9 +65,9 @@
   }
 
   function formatPctDescuento(valor) {
-    if (valor === null || valor === undefined || valor === '') return '—';
+    if (valor === null || valor === undefined || valor === '') return '�';
     const n = Number(valor);
-    if (!Number.isFinite(n)) return '—';
+    if (!Number.isFinite(n)) return '�';
     return `${Math.round(n)}%`;
   }
 
@@ -68,7 +75,7 @@
     window.Chart.register(window.ChartDataLabels);
   }
 
-  // ── Spinner ───────────────────────────────────────────────────────────────────────────────────
+  // ?? Spinner ???????????????????????????????????????????????????????????????????????????????????
   let cargaOverlay = null;
 
   function crearSpinner() {
@@ -117,22 +124,22 @@
     } catch { window.location.href = '../../varios/login/index.html'; return null; }
   }
 
-  // ── Sidebar ──────────────────────────────────────────────────────────────────────────────────
-  // Nombres estándar en todos los módulos del área ventas:
+  // ?? Sidebar ??????????????????????????????????????????????????????????????????????????????????
+  // Nombres est�ndar en todos los m�dulos del �rea ventas:
   //   Dashboard (activo) | Ventas Asignadas | Historial Cliente | Alertas
   const MODULOS = [
-    { nombre:'Ventas Asignadas', icon:'📊', url:'../ventas/index.html',                              area:['ventas','gerencia'] },
-    { nombre:'Historial Cliente',icon:'📋', url:'../historial-cliente/index.html',                   area:['ventas','gerencia'] },
-    { nombre:'Facturación',    icon:'🧾', url:'../../facturacion/facturacion/index.html',           area:['facturacion','contabilidad','gerencia'] },
-    { nombre:'Bodega',         icon:'🏭', url:'../../bodega/bodega/index.html',                    area:['bodega','produccion','gerencia'] },
-    { nombre:'Producción',     icon:'⚙️', url:'../../produccion/produccion/index.html',             area:['produccion','gerencia'] },
-    { nombre:'Serv. TEC',      icon:'🛠️', url:'../../servtecnico/servicio-tecnico/index.html',     area:['servicio-tecnico','servicio','gerencia'] },
-    { nombre:'Laboratorio',    icon:'🧪', url:'../../laboratorio/laboratorio/index.html',          area:['laboratorio','gerencia'] },
-    { nombre:'Cobranza',       icon:'💰', url:'../../cobranza/cobranza/index.html',                area:['cobranza','contabilidad','gerencia'] },
-    { nombre:'RRHH',           icon:'👥', url:'../../rrhh/rrhh/index.html',                        area:['rrhh','gerencia'] },
-    { nombre:'Contabilidad',   icon:'📜', url:'../../contabilidad/contabilidad/index.html',        area:['contabilidad','gerencia'] },
-    { nombre:'Administración', icon:'🔧', url:'../../admin/admin/index.html',                      area:['admin'] },
-    { nombre:'Alertas',        icon:'🔔', url:'../../varios/alertas/index.html',                   area: null },
+    { nombre:'Ventas Asignadas', icon:'??', url:'../ventas/index.html',                              area:['ventas','gerencia'] },
+    { nombre:'Historial Cliente',icon:'??', url:'../historial-cliente/index.html',                   area:['ventas','gerencia'] },
+    { nombre:'Facturaci�n',    icon:'??', url:'../../facturacion/facturacion/index.html',           area:['facturacion','contabilidad','gerencia'] },
+    { nombre:'Bodega',         icon:'??', url:'../../bodega/bodega/index.html',                    area:['bodega','produccion','gerencia'] },
+    { nombre:'Producci�n',     icon:'??', url:'../../produccion/produccion/index.html',             area:['produccion','gerencia'] },
+    { nombre:'Serv. TEC',      icon:'???', url:'../../servtecnico/servicio-tecnico/index.html',     area:['servicio-tecnico','servicio','gerencia'] },
+    { nombre:'Laboratorio',    icon:'??', url:'../../laboratorio/laboratorio/index.html',          area:['laboratorio','gerencia'] },
+    { nombre:'Cobranza',       icon:'??', url:'../../cobranza/cobranza/index.html',                area:['cobranza','contabilidad','gerencia'] },
+    { nombre:'RRHH',           icon:'??', url:'../../rrhh/rrhh/index.html',                        area:['rrhh','gerencia'] },
+    { nombre:'Contabilidad',   icon:'??', url:'../../contabilidad/contabilidad/index.html',        area:['contabilidad','gerencia'] },
+    { nombre:'Administraci�n', icon:'??', url:'../../admin/admin/index.html',                      area:['admin'] },
+    { nombre:'Alertas',        icon:'??', url:'../../varios/alertas/index.html',                   area: null },
   ];
 
   function cargarSidebar(usuario) {
@@ -144,8 +151,8 @@
     setText('chipName',   (usuario.nombre||usuario.email).split(' ')[0]);
     setText('headerDate', new Date().toLocaleDateString('es-CL',
       { weekday:'long', year:'numeric', month:'long', day:'numeric' }));
-    setText('welcomeTitle',    `Hola, ${(usuario.nombre||usuario.email).split(' ')[0]} 👋`);
-    setText('welcomeSubtitle', `Área: ${usuario.area||'Sistema'} — Texpro`);
+    setText('welcomeTitle',    `Hola, ${(usuario.nombre||usuario.email).split(' ')[0]} ??`);
+    setText('welcomeSubtitle', `�rea: ${usuario.area||'Sistema'} � Texpro`);
 
     const nav      = document.getElementById('sidebarNav');
     const visibles = MODULOS.filter(m => {
@@ -153,7 +160,7 @@
       if (usuario.is_admin) return true;
       return m.area.includes(usuario.area);
     });
-    if (!window.__APP_SIDEBAR_LOADED__ && nav) nav.innerHTML = `<span class="nav-section-title">NAVEGACIÓN</span>
+    if (!window.__APP_SIDEBAR_LOADED__ && nav) nav.innerHTML = `<span class="nav-section-title">NAVEGACI�N</span>
       <a class="nav-item active" href="#">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span class="nav-label">Dashboard</span>
@@ -176,7 +183,7 @@
     });
   }
 
-  // ── Selectores mes/año ────────────────────────────────────────────────────────────────────
+  // ?? Selectores mes/a�o ????????????????????????????????????????????????????????????????????
   function initSelectores() {
     const hoy    = new Date();
     const selMes = document.getElementById('filtroMes');
@@ -206,15 +213,17 @@
     };
   }
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────────────────────
+  // ?? KPIs ??????????????????????????????????????????????????????????????????????????????????
   async function cargarResumen() {
     try {
       const res  = await fetch(`${API}/resumen?${new URLSearchParams(getParams())}`, { headers:{ Authorization:`Bearer ${token()}` } });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       const { totalVentas, meta, progreso, pctDescuentoGlobal } = data;
+      const metaInfo = data.metaInfo || null;
       setText('kpiTotalVentas', formatCLP(totalVentas));
       setText('kpiMeta',        formatCLP(meta));
+      setText('kpiMetaDetalle', formatMetaDetalle(metaInfo));
       const descRedondeado = pctDescuentoGlobal > 0 ? Math.round(Number(pctDescuentoGlobal)) : 0;
       setText('kpiDescuento',   descRedondeado > 0 ? `${descRedondeado}%` : '0%');
       const pct  = Math.min(progreso, 100);
@@ -227,13 +236,13 @@
     } catch (err) { console.error('[cargarResumen]', err); }
   }
 
-  // ── Gráfico ───────────────────────────────────────────────────────────────────────────────
+  // ?? Gr�fico ???????????????????????????????????????????????????????????????????????????????
   const MESES_LABEL = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
   async function cargarGrafico() {
     try {
       const { mes, anio } = getParams();
-      setText('graficoTitulo', `Evolución Mensual — ${MESES_NOMBRE[Number(mes) - 1]} ${anio}`);
+      setText('graficoTitulo', `Evoluci�n Mensual � ${MESES_NOMBRE[Number(mes) - 1]} ${anio}`);
       const res  = await fetch(`${API}/evolucion?${new URLSearchParams({ mes, anio })}`, { headers:{ Authorization:`Bearer ${token()}` } });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
@@ -267,7 +276,7 @@
     } catch (err) { console.error('[cargarGrafico]', err); }
   }
 
-  // ── Tabla vendedores ──────────────────────────────────────────────────────────────────────
+  // ?? Tabla vendedores ??????????????????????????????????????????????????????????????????????
   async function cargarVendedores() {
     try {
       const res  = await fetch(`${API}/vendedores?${new URLSearchParams(getParams())}`, { headers:{ Authorization:`Bearer ${token()}` } });
@@ -284,7 +293,7 @@
         return `
         <tr>
           <td><strong>${escHtml(v.codVendedor)}</strong></td>
-          <td>${escHtml(v.nombreVendedor) || '—'}</td>
+          <td>${escHtml(v.nombreVendedor) || '�'}</td>
           <td>${v.totalFolios}</td>
           <td style="text-align:right">${formatCLP(totalVentasCobrado)}</td>
           <td style="text-align:right">${formatCLP(ventaRealLista)}</td>
@@ -305,7 +314,7 @@
     } catch (err) { console.error('[cargarVendedores]', err); }
   }
 
-  // ── Tabla ventas del mes ──────────────────────────────────────────────────────────────────
+  // ?? Tabla ventas del mes ??????????????????????????????????????????????????????????????????
   let ventasMesData = [];
 
   async function cargarVentasMes() {
@@ -349,17 +358,17 @@
     if (!lista.length) { tbody.innerHTML = '<tr class="tabla-empty"><td colspan="8">Sin registros</td></tr>'; return; }
     tbody.innerHTML = lista.map(v => {
       const pctDescRedondeado = v.pct_descuento > 0 ? Math.round(Number(v.pct_descuento)) : 0;
-      const pctDesc      = formatPctDescuento(v.pct_descuento ?? v.pctDescuento ?? v.dcto ?? v.Dcto ?? (pctDescRedondeado || null));
+      const pctDesc      = formatPctDescuento(v.pct_descuento ? v.pctDescuento ? v.dcto ? v.Dcto ? (pctDescRedondeado || null));
       const montoMostrar = v.es_compartido && v.monto_asignado != null ? v.monto_asignado : v.monto;
       const totLineaReal = Number(v.TotLineaReal || 0);
       const badgeComp    = v.es_compartido
         ? `<span style="font-size:.7rem;background:#00E2A7;color:#000;border-radius:4px;padding:1px 5px;margin-left:4px">Compartido ${v.porcentaje_asignado?v.porcentaje_asignado+'%':''}</span>`
         : '';
       return `<tr data-folio="${v.Folio}">
-        <td><strong>${escHtml(v.Folio) || '—'}</strong>${badgeComp}</td>
-        <td>${escHtml(v.fecha_formato) || '—'}</td>
-        <td>${escHtml(v.cliente) || '—'}</td>
-        <td>${escHtml(v.CodVendedor) || '—'}</td>
+        <td><strong>${escHtml(v.Folio) || '�'}</strong>${badgeComp}</td>
+        <td>${escHtml(v.fecha_formato) || '�'}</td>
+        <td>${escHtml(v.cliente) || '�'}</td>
+        <td>${escHtml(v.CodVendedor) || '�'}</td>
         <td style="text-align:right">${formatCLP(montoMostrar)}</td>
         <td style="text-align:right">${formatCLP(totLineaReal)}</td>
         <td style="text-align:right">${pctDesc}</td>
@@ -375,15 +384,15 @@
     );
   }
 
-  // ── Modal detalle folio ───────────────────────────────────────────────────────────────────
+  // ?? Modal detalle folio ???????????????????????????????????????????????????????????????????
   async function abrirDetalle(folio) {
     const overlay = document.getElementById('modalOverlay');
     const tbody   = document.getElementById('modalTbody');
     if (!overlay || !tbody) return;
-    setText('modalTitulo', `Folio N° ${folio}`);
+    setText('modalTitulo', `Folio N� ${folio}`);
     const venta = ventasMesData.find(v => String(v.Folio) === String(folio));
-    setText('modalSubtitulo', venta ? `${venta.cliente||''} • ${venta.fecha_formato||''}` : '');
-    setText('modalTotalValor', '—');
+    setText('modalSubtitulo', venta ? `${venta.cliente||''} " ${venta.fecha_formato||''}` : '');
+    setText('modalTotalValor', '�');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem">Cargando...</td></tr>';
     overlay.classList.add('modal-overlay--visible');
     overlay.setAttribute('aria-hidden','false');
@@ -391,23 +400,23 @@
     try {
       const res  = await fetch(`${API}/detalle/${folio}`, { headers:{ Authorization:`Bearer ${token()}` } });
       const data = await res.json();
-      if (!res.ok || !data.ok) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-danger)">⚠️ Error</td></tr>'; return; }
-      if (!data.detalle?.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Sin líneas</td></tr>'; return; }
+      if (!res.ok || !data.ok) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-danger)">?? Error</td></tr>'; return; }
+      if (!data.detalle?.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center">Sin l�neas</td></tr>'; return; }
       const d0 = data.detalle[0] || {};
       setText('modalSubtitulo', venta
-        ? `${venta.cliente || ''} • ${venta.fecha_formato || ''} • Cód. Cliente: ${d0.CodAux || '—'} • CanCod: ${d0.CanCod || '—'}`
-        : `Cód. Cliente: ${d0.CodAux || '—'} • CanCod: ${d0.CanCod || '—'}`);
-      const total = data.detalle.reduce((s,l)=>s+(Number(l.neto_total ?? l.TotLinea ?? 0)||0),0);
+        ? `${venta.cliente || ''} " ${venta.fecha_formato || ''} " C�d. Cliente: ${d0.CodAux || ''} " CanCod: ${d0.CanCod || ''}`
+        : `C�d. Cliente: ${d0.CodAux || '�'} � CanCod: ${d0.CanCod || '�'}`);
+      const total = data.detalle.reduce((s,l)=>s+(Number(l.neto_total ? l.TotLinea ? 0)||0),0);
       tbody.innerHTML = data.detalle.map(l=>`
         <tr>
-          <td><code>${escHtml(l.CodProd) || '—'}</code></td>
-          <td>${escHtml(l.DesProd) || '—'}</td>
-          <td style="text-align:center">${l.CantFacturada ?? '—'}</td>
+          <td><code>${escHtml(l.CodProd) || '�'}</code></td>
+          <td>${escHtml(l.DesProd) || '�'}</td>
+          <td style="text-align:center">${l.CantFacturada ? ''}</td>
           <td style="text-align:right">${formatCLP(l.precio_real)}</td>
-          <td style="text-align:right">${formatCLP(l.precio_vta ?? l.PrecioVta)}</td>
+          <td style="text-align:right">${formatCLP(l.precio_vta ? l.PrecioVta)}</td>
           <td style="text-align:right">${formatCLP(l.neto_real)}</td>
-          <td style="text-align:right"><strong>${formatCLP(l.neto_total ?? l.TotLinea)}</strong></td>
-          <td style="text-align:right">${formatPctDescuento(l.dcto ?? l.Dcto)}</td>
+          <td style="text-align:right"><strong>${formatCLP(l.neto_total ? l.TotLinea)}</strong></td>
+          <td style="text-align:right">${formatPctDescuento(l.dcto ? l.Dcto)}</td>
         </tr>`).join('');
       setText('modalTotalValor', formatCLP(total));
     } catch(err) { console.error('[abrirDetalle]',err); tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-danger)">&#x26A0;&#xFE0F; Error</td></tr>'; }
@@ -421,24 +430,24 @@
     document.body.style.overflow = '';
   }
 
-  // ── CARTERA DE CLIENTES ───────────────────────────────────────────────────────────────────
+  // ?? CARTERA DE CLIENTES ???????????????????????????????????????????????????????????????????
   async function cargarCartera() {
     try {
       const res  = await fetch(`${API_CART}?${new URLSearchParams(getParams())}`, { headers:{ Authorization:`Bearer ${token()}` } });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Error cartera');
 
-      const total      = data.TotalClientes      ?? data.totalClientes      ?? null;
-      const activos    = data.ClientesActivos    ?? data.clientesActivos    ?? null;
-      const inactivos  = data.ClientesInactivos  ?? data.clientesInactivos  ?? null;
-      const nuevos     = data.ClientesNuevos     ?? data.clientesNuevos     ?? null;
-      const recuperados= data.ClientesRecuperados?? data.clientesRecuperados?? null;
+      const total      = data.TotalClientes      ? data.totalClientes      ? null;
+      const activos    = data.ClientesActivos    ? data.clientesActivos    ? null;
+      const inactivos  = data.ClientesInactivos  ? data.clientesInactivos  ? null;
+      const nuevos     = data.ClientesNuevos     ? data.clientesNuevos     ? null;
+      const recuperados= data.ClientesRecuperados? data.clientesRecuperados? null;
 
-      setText('countTotal',      total       !== null ? String(total)       : '—');
-      setText('countActivo',     activos     !== null ? String(activos)     : '—');
-      setText('countInactivo',   inactivos   !== null ? String(inactivos)   : '—');
-      setText('countNuevo',      nuevos      !== null ? String(nuevos)      : '—');
-      setText('countRecuperado', recuperados !== null ? String(recuperados) : '—');
+      setText('countTotal',      total       !== null ? String(total)       : '');
+      setText('countActivo',     activos     !== null ? String(activos)     : '');
+      setText('countInactivo',   inactivos   !== null ? String(inactivos)   : '');
+      setText('countNuevo',      nuevos      !== null ? String(nuevos)      : '');
+      setText('countRecuperado', recuperados !== null ? String(recuperados) : '');
 
       carteraData.total      = data.total         || [];
       carteraData.activos    = data.activos        || [];
@@ -461,7 +470,7 @@
     } catch (err) {
       console.error('[cargarCartera]', err);
       ['countTotal','countActivo','countInactivo','countNuevo','countRecuperado','countActivoMes']
-        .forEach(id => setText(id, '—'));
+        .forEach(id => setText(id, '�'));
     }
   }
 
@@ -516,16 +525,16 @@
     tbody.innerHTML = lista.map(c => {
       const emailHtml = c.EMail
         ? `<a href="mailto:${escHtml(c.EMail)}" style="color:var(--color-primary);text-decoration:none" title="${escHtml(c.EMail)}">${escHtml(c.EMail)}</a>`
-        : '—';
+        : '�';
       const tel1Html = c.FONAUX1
         ? `<a href="tel:${escHtml(c.FONAUX1)}" style="color:var(--color-primary);text-decoration:none">${escHtml(c.FONAUX1)}</a>`
-        : '—';
+        : '�';
       const tel2Html = c.FonAux2
         ? `<a href="tel:${escHtml(c.FonAux2)}" style="color:var(--color-primary);text-decoration:none">${escHtml(c.FonAux2)}</a>`
-        : '—';
+        : '�';
       return `<tr>
-          <td><code>${escHtml(c.CodAux) || '—'}</code></td>
-          <td>${escHtml(c.NomAux) || '—'}</td>
+          <td><code>${escHtml(c.CodAux) || '�'}</code></td>
+          <td>${escHtml(c.NomAux) || '�'}</td>
           <td>${tel1Html}</td>
           <td>${tel2Html}</td>
           <td>${emailHtml}</td>
@@ -572,7 +581,7 @@
     });
   }
 
-  // ── Gráfico Distribución por Categoría ───────────────────────────────────────────────────
+  // ?? Gr�fico Distribuci�n por Categor�a ???????????????????????????????????????????????????
   const COLORES_TORTA = ['#00E2A7','#4ECDC4','#45B7D1','#96CEB4','#F5A623','#DDA0DD','#F06543','#00B4D8'];
 
   function renderGraficoClientesDistribucion(datos) {
@@ -668,7 +677,7 @@
     } catch (err) { console.error('[cargarGraficoClientes]', err); }
   }
 
-  // ── Clientes por vendedor ─────────────────────────────────────────────────────────────────
+  // ?? Clientes por vendedor ?????????????????????????????????????????????????????????????????
   async function cargarClientesResumen() {
     try {
       const res  = await fetch(`${API}/clientes-resumen?${new URLSearchParams(getParams())}`, { headers:{ Authorization:`Bearer ${token()}` } });
@@ -691,7 +700,7 @@
     } catch (err) { console.error('[cargarClientesResumen]', err); }
   }
 
-  // ── Cargar todo ───────────────────────────────────────────────────────────────────────────
+  // ?? Cargar todo ???????????????????????????????????????????????????????????????????????????
   async function cargarTodo() {
     mostrarCarga();
     try {
@@ -711,7 +720,7 @@
     }
   }
 
-  // ── Init ──────────────────────────────────────────────────────────────────────────────────
+  // ?? Init ??????????????????????????????????????????????????????????????????????????????????
   async function init() {
     const usuario = await verificarSesion();
     if (!usuario) return;

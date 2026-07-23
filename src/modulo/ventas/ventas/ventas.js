@@ -31,8 +31,8 @@
   }
 
   function formatDescuentoVenta(v) {
-    const valorReal = Number(v.valor_real ?? v.ValorReal ?? v.monto ?? v.TotLinea ?? 0);
-    const totLineaReal = Number(v.TotLineaReal ?? v.tot_linea_real ?? v.total_lista_real ?? v.valor_historico_linea ?? 0);
+    const valorReal = Number(v.valor_real ? v.ValorReal ? v.monto ? v.TotLinea ? 0);
+    const totLineaReal = Number(v.TotLineaReal ? v.tot_linea_real ? v.total_lista_real ? v.valor_historico_linea ? 0);
 
     if (
       Number.isFinite(valorReal) &&
@@ -82,7 +82,7 @@
   }
 
   function claveFechaRegistro(registro) {
-    const valor = String(registro?.Fecha ?? registro?.fecha ?? registro?.fecha_formato ?? registro?.FechaDocumento ?? '').trim();
+    const valor = String(registro?.Fecha ? registro?.fecha ? registro?.fecha_formato ? registro?.FechaDocumento ? '').trim();
     if (!valor) return Number.MAX_SAFE_INTEGER;
 
     const ddmmyyyy = /^(\d{2})\/(\d{2})\/(\d{4})$/;
@@ -99,8 +99,8 @@
   }
 
   function compararRegistrosPDF(a, b) {
-    const folioA = Number(a?.folio ?? a?.Folio ?? 0) || 0;
-    const folioB = Number(b?.folio ?? b?.Folio ?? 0) || 0;
+    const folioA = Number(a?.folio ? a?.Folio ? 0) || 0;
+    const folioB = Number(b?.folio ? b?.Folio ? 0) || 0;
     if (folioA !== folioB) return folioA - folioB;
     const fechaA = claveFechaRegistro(a);
     const fechaB = claveFechaRegistro(b);
@@ -226,17 +226,17 @@
 
     const filas = (data.detalle || []).map(p => {
       const cant     = Number(p.CantFacturada) || 0;
-      const precReal = Number(p.precio_real ?? p.PrecioReal ?? p.precio_real_oficial) || 0;
-      const precVta  = Number(p.precio_vta ?? p.PrecioVta ?? p.precio_unitario_cobrado) || 0;
-      const totReal  = Number(p.neto_real ?? p.NetoReal ?? p.valor_historico_linea) || 0;
-      const totVta   = Number(p.neto_total ?? p.NetoTotal ?? p.valor_cobrado_linea ?? p.TotLinea) || 0;
-      const descBase = Number(p.dcto ?? p.Dcto);
+      const precReal = Number(p.precio_real ? p.PrecioReal ? p.precio_real_oficial) || 0;
+      const precVta  = Number(p.precio_vta ? p.PrecioVta ? p.precio_unitario_cobrado) || 0;
+      const totReal  = Number(p.neto_real ? p.NetoReal ? p.valor_historico_linea) || 0;
+      const totVta   = Number(p.neto_total ? p.NetoTotal ? p.valor_cobrado_linea ? p.TotLinea) || 0;
+      const descBase = Number(p.dcto ? p.Dcto);
       const desc = Number.isFinite(descBase)
         ? descBase
         : (precReal !== 0
           ? Math.round((((Math.abs(totReal) - Math.abs(totVta)) / Math.abs(totReal)) * 100) * 100) / 100
           : 0);
-      const descStr  = Number.isFinite(desc) ? `${desc}%` : '—';
+      const descStr  = Number.isFinite(desc) ? `${desc}%` : '';
       const negativo = totReal < 0;
 
       const codProd  = p.CodProd  || '—';
@@ -355,8 +355,8 @@
   function resumenDetalleFolio(lineas) {
     const resumen = (Array.isArray(lineas) ? lineas : []).reduce((acc, p) => {
       acc.cant += Number(p?.CantFacturada) || 0;
-      acc.totalReal += Number(p?.neto_real ?? p?.NetoReal ?? 0) || 0;
-      acc.totalVenta += Number(p?.neto_total ?? p?.NetoTotal ?? p?.TotLinea ?? 0) || 0;
+      acc.totalReal += Number(p?.neto_real ? p?.NetoReal ? 0) || 0;
+      acc.totalVenta += Number(p?.neto_total ? p?.NetoTotal ? p?.TotLinea ? 0) || 0;
       return acc;
     }, { cant: 0, totalReal: 0, totalVenta: 0, dcto: null });
 
@@ -413,7 +413,7 @@
     doc.text(`Folio: ${share.folio}`, 16, y + 5.2);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(40, 40, 40);
-    doc.text(`Fecha: ${share.fecha ? new Date(share.fecha).toLocaleDateString('es-CL') : '—'}`, 72, y + 5.2);
+    doc.text(`Fecha: ${share.fecha ? new Date(share.fecha).toLocaleDateString('es-CL') : ''}`, 72, y + 5.2);
     doc.text(`Tipo: ${tipo || '—'}`, 132, y + 5.2);
     doc.text(`Cód. Cliente: ${codAux}`, 16, y + 10.8);
     doc.text(`Vendedor asignado: ${vendedorAsignado}`, 102, y + 10.8);
@@ -428,11 +428,11 @@
   function renderTablaDetalleCompartido(doc, y, detalle) {
     const filasProductos = (Array.isArray(detalle) ? detalle : []).map(p => {
       const cant     = Number(p.CantFacturada) || 0;
-      const precReal = Number(p.precio_real ?? p.PrecioReal ?? p.precio_real_oficial) || 0;
-      const precVta  = Number(p.precio_vta ?? p.PrecioVta ?? p.precio_unitario_cobrado) || 0;
-      const totReal  = Number(p.neto_real ?? p.NetoReal ?? p.valor_historico_linea) || 0;
-      const totVta   = Number(p.neto_total ?? p.NetoTotal ?? p.valor_cobrado_linea ?? p.TotLinea) || 0;
-      const descBase = Number(p.dcto ?? p.Dcto);
+      const precReal = Number(p.precio_real ? p.PrecioReal ? p.precio_real_oficial) || 0;
+      const precVta  = Number(p.precio_vta ? p.PrecioVta ? p.precio_unitario_cobrado) || 0;
+      const totReal  = Number(p.neto_real ? p.NetoReal ? p.valor_historico_linea) || 0;
+      const totVta   = Number(p.neto_total ? p.NetoTotal ? p.valor_cobrado_linea ? p.TotLinea) || 0;
+      const descBase = Number(p.dcto ? p.Dcto);
       const desc     = Number.isFinite(descBase) ? descBase : (
         precReal !== 0
           ? Math.round((((Math.abs(totReal) - Math.abs(totVta)) / Math.abs(totReal)) * 100) * 100) / 100
@@ -446,7 +446,7 @@
         formatCLP(precVta),
         formatCLP(totReal),
         formatCLP(totVta),
-        Number.isFinite(desc) ? `${desc}%` : '—',
+        Number.isFinite(desc) ? `${desc}%` : '',
       ];
     });
 
@@ -523,9 +523,9 @@
       startY: y + 5,
       head: [['Cant.', 'Total Real', 'Total Venta', 'Dcto']],
       body: [[
-        String(resumen.cant ?? 0),
-        formatCLP(resumen.totalReal ?? 0),
-        formatCLP(resumen.totalVenta ?? 0),
+        String(resumen.cant ? 0),
+        formatCLP(resumen.totalReal ? 0),
+        formatCLP(resumen.totalVenta ? 0),
         resumen.dcto == null ? '?' : `${resumen.dcto}%`,
       ]],
       theme: 'grid',
@@ -614,7 +614,7 @@
   }
 
   function codigoVendedorDocumento(venta) {
-    return String(venta?.CodVendedor ?? venta?.cod_vendedor_principal ?? '').trim();
+    return String(venta?.CodVendedor ? venta?.cod_vendedor_principal ? '').trim();
   }
 
   function codigoVendedorFiltroPDF() {
@@ -624,7 +624,7 @@
   function nombreVendedorPorCodigoPDF(codigo) {
     const cod = String(codigo || '').trim();
     if (!cod) return '';
-    const encontrado = (Array.isArray(todosVendedores) ? todosVendedores : []).find(v => String(v?.cod ?? '').trim() === cod);
+    const encontrado = (Array.isArray(todosVendedores) ? todosVendedores : []).find(v => String(v?.cod ? '').trim() === cod);
     return String(encontrado?.nombre || encontrado?.usuario || '').trim();
   }
 
@@ -634,7 +634,7 @@
         return 'TEXPRO — Reporte de Ventas Asignadas';
       case 'especifico':
         return nombreVendedor
-          ? `TEXPRO — Reporte Vendedor ${codigo || '—'} — ${nombreVendedor}`
+          ? `TEXPRO  Reporte Vendedor ${codigo || ''}  ${nombreVendedor}`
           : `TEXPRO — Reporte Vendedor ${codigo || '—'}`;
       default:
         return 'TEXPRO — Reporte Vendedores';
@@ -718,7 +718,7 @@
 
   function codigosUsuarioPDF() {
     return (Array.isArray(_usuarioActual?.vendedores) ? _usuarioActual.vendedores : [])
-      .map(v => String(v?.cod_vendedor ?? '').trim())
+      .map(v => String(v?.cod_vendedor ? '').trim())
       .filter(Boolean);
   }
 
@@ -733,11 +733,11 @@
     const agregar = (item, vistaCompartido) => {
       if (!item) return;
       const key = [
-        item.id ?? '',
-        item.folio ?? '',
-        item.cod_vendedor_principal ?? '',
-        item.cod_vendedor_compartido ?? '',
-        item.fecha ?? '',
+        item.id ? '',
+        item.folio ? '',
+        item.cod_vendedor_principal ? '',
+        item.cod_vendedor_compartido ? '',
+        item.fecha ? '',
       ].join('|');
       if (vistos.has(key)) return;
       vistos.add(key);
@@ -935,11 +935,11 @@
 
             const filasProductos = lineas.map(p => {
               const cant     = Number(p.CantFacturada) || 0;
-              const precReal = Number(p.precio_real ?? p.PrecioReal ?? p.precio_real_oficial) || 0;
-              const precVta  = Number(p.precio_vta ?? p.PrecioVta ?? p.precio_unitario_cobrado) || 0;
-              const totReal  = Number(p.neto_real ?? p.NetoReal ?? p.valor_historico_linea) || 0;
-              const totVta   = Number(p.neto_total ?? p.NetoTotal ?? p.valor_cobrado_linea ?? p.TotLinea) || 0;
-              const descBase = Number(p.dcto ?? p.Dcto);
+              const precReal = Number(p.precio_real ? p.PrecioReal ? p.precio_real_oficial) || 0;
+              const precVta  = Number(p.precio_vta ? p.PrecioVta ? p.precio_unitario_cobrado) || 0;
+              const totReal  = Number(p.neto_real ? p.NetoReal ? p.valor_historico_linea) || 0;
+              const totVta   = Number(p.neto_total ? p.NetoTotal ? p.valor_cobrado_linea ? p.TotLinea) || 0;
+              const descBase = Number(p.dcto ? p.Dcto);
               const desc     = Number.isFinite(descBase) ? descBase : (
                 precReal !== 0
                   ? Math.round((((Math.abs(totReal) - Math.abs(totVta)) / Math.abs(totReal)) * 100) * 100) / 100
@@ -953,7 +953,7 @@
                 formatCLP(precVta),
                 formatCLP(totReal),
                 formatCLP(totVta),
-                Number.isFinite(desc) ? `${desc}%` : '—',
+                Number.isFinite(desc) ? `${desc}%` : '',
               ];
             });
 
@@ -1040,7 +1040,7 @@
 
         const filasC = compartidosParaPDF.map(c => [
           String(c.folio || '—'),
-          c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—',
+          c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '',
           c.cliente || '—',
           c.coordinador || c.cod_vendedor_principal || '—',
           `${c.porcentaje}%`,
@@ -1075,7 +1075,7 @@
 
         const filasA = asignadosParaPDF.map(c => [
           String(c.folio || '—'),
-          c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—',
+          c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '',
           c.cliente || '—',
           c.nombre_vendedor_compartido || c.cod_vendedor_compartido || '—',
           `${c.porcentaje}%`,
@@ -1279,14 +1279,14 @@
 
   function opcionesVendedores(seleccionado) {
     return todosVendedores.map(v =>
-      `<option value="${v.cod}" ${v.cod === seleccionado ? 'selected' : ''}>${v.cod} — ${v.nombre||'Sin nombre'}</option>`
+      `<option value="${v.cod}" ${v.cod === seleccionado ? 'selected' : ''}>${v.cod}  ${v.nombre||'Sin nombre'}</option>`
     ).join('');
   }
 
   function filaAsignadoVista(c) {
     return `
       <td><strong>${c.folio}</strong></td>
-      <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—'}</td>
+      <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : ''}</td>
       <td>${c.cliente||'—'}</td>
       <td>${c.nombre_vendedor_compartido||c.cod_vendedor_compartido||'—'}</td>
       <td style="text-align:right">${c.porcentaje}%</td>
@@ -1302,7 +1302,7 @@
   function filaAsignadoEdicion(c) {
     return `
       <td><strong>${c.folio}</strong></td>
-      <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—'}</td>
+      <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : ''}</td>
       <td>${c.cliente||'—'}</td>
       <td>
         <select class="crud-input-select" id="editVend_${c.id}">
@@ -1348,7 +1348,7 @@
         btn.addEventListener('click', async () => {
           const id    = btn.dataset.id;
           const folio = btn.dataset.folio;
-          if (!confirm(`Â¿Eliminar asignación del folio ${folio}?`)) return;
+          if (!confirm(`�Eliminar asignaci�n del folio ${folio}?`)) return;
           try {
             const r = await fetch(`${API}/compartir/${id}`, { method:'DELETE', headers:{ Authorization:`Bearer ${token()}` } });
             const d = await r.json();
@@ -1407,7 +1407,7 @@
         if (tbodyV) tbodyV.innerHTML = '<tr class="tabla-empty"><td colspan="8" style="text-align:center;padding:2rem;color:#aaa">Sin ventas este mes</td></tr>';
       } else if (tbodyV) {
         tbodyV.innerHTML = _ultimasVentas.map(v => {
-          const totLineaReal = v.TotLineaReal ?? v.monto;
+          const totLineaReal = v.TotLineaReal ? v.monto;
           return `
             <tr data-folio="${v.Folio}">
               <td class="det-btn-td">
@@ -1449,7 +1449,7 @@
               </button>
             </td>
             <td><strong>${c.folio}</strong></td>
-            <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : '—'}</td>
+            <td>${c.fecha ? new Date(c.fecha).toLocaleDateString('es-CL') : ''}</td>
             <td>${c.cliente || '—'}</td>
             <td>${c.coordinador || c.cod_vendedor_principal || '—'}</td>
             <td style="text-align:right">${c.porcentaje}%</td>

@@ -56,8 +56,8 @@
     { id:2, orden:'OE-2026-042', producto:'Hipoclorito de Sodio 10%', cantidad:180, unidad:'L',  destino:'SISS Concepción',     fechaDesp:`${_anio}-${_pad(_mes)}-28`, estado:'Listo'     },
     { id:3, orden:'OE-2026-043', producto:'Sulfato de Aluminio',      cantidad:300, unidad:'kg', destino:'MOP Santiago',        fechaDesp:`${_anio}-${_pad(_mes)}-29`, estado:'En prep.'  },
     { id:4, orden:'OE-2026-044', producto:'Ácido Muriático 32%',      cantidad:120, unidad:'L',  destino:'ANWANDTER Ltda.',     fechaDesp:`${_anio}-${_pad(_mes)}-30`, estado:'En prep.'  },
-    { id:5, orden:'OE-2026-045', producto:'Polímero Floculante',      cantidad:200, unidad:'kg', destino:'SMAPA Maipú',         fechaDesp:`${_anio}-${_pad(_mes+1 > 12 ? 1 : _mes+1)}-02`, estado:'Pendiente' },
-    { id:6, orden:'OE-2026-046', producto:'Soda Cáustica 50%',        cantidad:150, unidad:'kg', destino:'Aguas Andinas S.A.',  fechaDesp:`${_anio}-${_pad(_mes+1 > 12 ? 1 : _mes+1)}-03`, estado:'Pendiente' },
+    { id:5, orden:'OE-2026-045', producto:'Pol�mero Floculante',      cantidad:200, unidad:'kg', destino:'SMAPA Maip�',         fechaDesp:`${_anio}-${_pad(_mes+1 > 12 ? 1 : _mes+1)}-02`, estado:'Pendiente' },
+    { id:6, orden:'OE-2026-046', producto:'Soda C�ustica 50%',        cantidad:150, unidad:'kg', destino:'Aguas Andinas S.A.',  fechaDesp:`${_anio}-${_pad(_mes+1 > 12 ? 1 : _mes+1)}-03`, estado:'Pendiente' },
   ];
 
   // ── Estado mutable ─────────────────────────────────────────────────────────
@@ -271,7 +271,7 @@
       const pct    = Math.min(Math.round((p.stockActual / p.metaMes) * 100), 100);
       const color  = pct >= 100 ? 'var(--color-primary)' : pct >= 70 ? '#F5A623' : 'var(--color-danger)';
       const badge  = p.estado === 'Completado'     ? 'badge--verde'
-                   : p.estado === 'En producción'  ? 'badge--naranja'
+                   : p.estado === 'En producci�n'  ? 'badge--naranja'
                    : 'badge--gris';
       return `
         <tr>
@@ -390,7 +390,7 @@
     const cabecera = ['Lote','Fecha','Código','Producto','Cantidad','Unidad','Turno','Operario','Observación'];
     const filas = datos.map(r => [
       r.lote, r.fecha, r.cod, r.producto, r.cantidad, r.unidad, r.turno, r.operario, r.observacion,
-    ].map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','));
+    ].map(c => `"${String(c ? '').replace(/"/g, '""')}"`).join(','));
 
     const csv  = [cabecera.join(','), ...filas].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });

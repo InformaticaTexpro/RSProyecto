@@ -63,7 +63,7 @@
  *   haciendo que apareciera disponible cuando ya estaba asignado.
  *
  * FIX 2026-06-17 (b):
- *   /asignados — acepta ?mes=&anio= opcionales para filtrar por período.
+ *   /asignados  acepta ?mes=&anio= opcionales para filtrar por per�odo.
  *   Sin parámetros devuelve todos (uso interno). Con parámetros filtra el
  *   período seleccionado en el panel (comportamiento esperado por el usuario).
  *
@@ -123,7 +123,7 @@ function mssqlIn(arr) {
 function mesAnioDesdeSQL(fechaSQL) {
   // fechaSQL puede ser un objeto Date de mssql o una cadena ISO
   const iso = (fechaSQL instanceof Date)
-    ? fechaSQL.toISOString()          // ya es UTC → 'YYYY-MM-DDTHH:...'
+    ? fechaSQL.toISOString()          // ya es UTC � 'YYYY-MM-DDTHH:...'
     : String(fechaSQL);               // cadena ISO de SQL Server
   // Tomar solo los primeros 10 caracteres: 'YYYY-MM-DD'
   const [anioStr, mesStr] = iso.slice(0, 10).split('-');
@@ -188,7 +188,7 @@ router.get('/vendedores', async (req, res) => {
   const usuario = req.usuario, codigos = getCodigos(usuario), hoy = new Date();
   const { validarMesAnio } = require('../utils/stringHelpers');
   let mes, anio;
-  try { ({ mes, anio } = validarMesAnio(req.query.mes ?? (hoy.getMonth() + 1), req.query.anio ?? hoy.getFullYear())); }
+  try { ({ mes, anio } = validarMesAnio(req.query.mes ? (hoy.getMonth() + 1), req.query.anio ? hoy.getFullYear())); }
   catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
   if (!codigos.length) return res.json({ ok: true, vendedores: [] });
 
@@ -471,7 +471,7 @@ router.get('/compartir/lista', async (req, res) => {
   const usuario = req.usuario, codigosCoord = getCodigosCoordinador(usuario), hoy = new Date();
   const { validarMesAnio } = require('../utils/stringHelpers');
   let mes, anio;
-  try { ({ mes, anio } = validarMesAnio(req.query.mes ?? (hoy.getMonth() + 1), req.query.anio ?? hoy.getFullYear())); }
+  try { ({ mes, anio } = validarMesAnio(req.query.mes ? (hoy.getMonth() + 1), req.query.anio ? hoy.getFullYear())); }
   catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
   if (!codigosCoord.length) return res.json({ ok: false, error: 'No autorizado para compartir' });
   try {
@@ -624,7 +624,7 @@ router.get('/compartidos', async (req, res) => {
   const usuario = req.usuario, codigos = getCodigos(usuario), hoy = new Date();
   const { validarMesAnio } = require('../utils/stringHelpers');
   let mes, anio;
-  try { ({ mes, anio } = validarMesAnio(req.query.mes ?? (hoy.getMonth() + 1), req.query.anio ?? hoy.getFullYear())); }
+  try { ({ mes, anio } = validarMesAnio(req.query.mes ? (hoy.getMonth() + 1), req.query.anio ? hoy.getFullYear())); }
   catch (err) { return res.status(400).json({ ok: false, error: err.message }); }
   if (!codigos.length) return res.json({ ok: true, compartidos: [] });
   try {
@@ -698,7 +698,7 @@ router.get('/categorias-vendedor', async (req, res) => {
   const { validarMesAnio } = require('../utils/stringHelpers');
   let mes, anio;
   try {
-    ({ mes, anio } = validarMesAnio(req.query.mes ?? (hoy.getMonth() + 1), req.query.anio ?? hoy.getFullYear()));
+    ({ mes, anio } = validarMesAnio(req.query.mes ? (hoy.getMonth() + 1), req.query.anio ? hoy.getFullYear()));
   } catch (err) {
     return res.status(400).json({ ok: false, error: err.message });
   }
@@ -760,7 +760,7 @@ router.get('/clientes-resumen', async (req, res) => {
   const { validarMesAnio } = require('../utils/stringHelpers');
   let mes, anio;
   try {
-    ({ mes, anio } = validarMesAnio(req.query.mes ?? (hoy.getMonth() + 1), req.query.anio ?? hoy.getFullYear()));
+    ({ mes, anio } = validarMesAnio(req.query.mes ? (hoy.getMonth() + 1), req.query.anio ? hoy.getFullYear()));
   } catch (err) {
     return res.status(400).json({ ok: false, error: err.message });
   }

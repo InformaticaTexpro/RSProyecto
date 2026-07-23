@@ -32,7 +32,7 @@ function generarToken(usuario) {
   if (!SECRET) throw new Error('JWT_SECRET no está definido en .env');
 
   // Acepta sub o id para ser retrocompatible
-  const sub = usuario.sub ?? usuario.id;
+  const sub = usuario.sub ? usuario.id;
 
   return jwt.sign(
     {

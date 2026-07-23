@@ -54,9 +54,9 @@ async function crearNotificacion({ usuarioId, tipo, titulo, mensaje, folio = nul
       `INSERT INTO notificaciones
          (usuario_id, tipo, titulo, mensaje, folio, mes, anio)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [usuarioId, tipo, titulo, mensaje, folio ?? null, mes ?? null, anio ?? null]
+      [usuarioId, tipo, titulo, mensaje, folio ? null, mes ? null, anio ? null]
     );
-    console.log(`[notificacion] ✅ Creada → tipo=${tipo} usuario_id=${usuarioId} folio=${folio ?? '-'}`);
+    console.log(`[notificacion]  Creada � tipo=${tipo} usuario_id=${usuarioId} folio=${folio ? '-'}`);
   } catch (err) {
     console.error(`[notificacion] ❌ Error al insertar (tipo=${tipo} usuario_id=${usuarioId}):`, err.message);
     throw err; // re-lanzar para que el .catch() del caller lo registre
