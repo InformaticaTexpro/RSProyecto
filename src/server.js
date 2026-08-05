@@ -4,6 +4,7 @@
  * server.js — Texpro RSProyecto
  */
 
+const http     = require('http');
 const path      = require('path');
 const express   = require('express');
 const helmet    = require('helmet');
@@ -24,6 +25,7 @@ const dashboardPanelRoutes  = require('./routes/dashboard.panel');
 const dashboardRoutes       = require('./routes/dashboard');
 const adminRoutes           = require('./routes/admin');
 const notificacionesRoutes  = require('./routes/notificaciones');
+const mensajeriaRoutes      = require('./routes/mensajeria');
 const carteraRoutes         = require('./routes/cartera');
 const alertasRoutes         = require('./routes/alertas');
 const indicadoresRoutes     = require('./routes/indicadores');
@@ -34,9 +36,15 @@ const rrhhRoutes            = require('./routes/rrhh');
 const { requireAuth }       = require('./middlewares/requireAuth');
 const { getDetalleFolio }   = require('./models/venta');
 const { validateFolio }     = require('./utils/validators');
+const { attachRealtime }     = require('./realtime/setup');
 
 const app  = express();
+const server = http.createServer(app);
 const PORT = Number(process.env.PORT || 3000);
+const io = attachRealtime(app, server);
+
+app.server = server;
+app.io = io;
 
 // ── Proxy confiable (Render / Railway usan proxy inverso)
 app.set('trust proxy', 1);
@@ -153,6 +161,7 @@ app.use('/api/dashboard',       dashboardPanelRoutes);
 app.use('/api/dashboard',       dashboardRoutes);
 app.use('/api/admin',           adminRoutes);
 app.use('/api/notificaciones',  notificacionesRoutes);
+app.use('/api/mensajeria',      mensajeriaRoutes);
 app.use('/api/cartera',         carteraRoutes);
 app.use('/api/alertas',         alertasRoutes);
 app.use('/api/indicadores',     indicadoresRoutes);
@@ -177,7 +186,7 @@ app.use((err, _req, res, _next) => {
 });
 
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`[RSProyecto] Servidor en http://localhost:${PORT}`));
+  server.listen(PORT, () => console.log(`[RSProyecto] Servidor en http://localhost:${PORT}`));
 }
 
 module.exports = app;

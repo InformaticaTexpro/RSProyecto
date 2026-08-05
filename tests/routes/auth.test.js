@@ -8,21 +8,20 @@
 
 const request = require('supertest');
 const express = require('express');
-const jwt     = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
-process.env.JWT_SECRET     = 'test-secret-auth';
+process.env.JWT_SECRET = 'test-secret-auth';
 process.env.JWT_EXPIRES_IN = '8h';
 
-// ── Mocks ──────────────────────────────────────────────────────────────────────
 const mockDbQuery = jest.fn();
 jest.mock('../../src/config/db', () => ({
   pool: { query: mockDbQuery },
 }));
 
 jest.mock('../../src/utils/pbkdf2Django', () => ({
-  parseDjangoHash:      jest.requireActual('../../src/utils/pbkdf2Django').parseDjangoHash,
+  parseDjangoHash: jest.requireActual('../../src/utils/pbkdf2Django').parseDjangoHash,
   verifyPasswordDjango: jest.fn(),
-  hashPasswordDjango:   jest.fn(() => 'fakehash'),
+  hashPasswordDjango: jest.fn(() => 'fakehash'),
 }));
 
 jest.mock('../../src/models/usuario', () => ({
@@ -44,25 +43,34 @@ app.use('/api/auth', authRouter);
 
 beforeEach(() => jest.clearAllMocks());
 
-// ── POST /api/auth/login ───────────────────────────────────────────────────────
 describe('POST /api/auth/login', () => {
   const fakeUser = {
-    id: 1, email: 'ana@texpro.cl', nombre: 'Ana',
-    password: 'pbkdf2_sha256$600000$saltABC$AAABBBCCC=', area: 'Ventas',
-    is_admin: 0, is_active: 1,
+    id: 1,
+    email: 'ana@texpro.cl',
+    nombre: 'Ana',
+    password: 'pbkdf2_sha256$600000$saltABC$AAABBBCCC=',
+    area: 'Ventas',
+    is_admin: 0,
+    is_active: 1,
   };
+
   const fakeMenus = [
     { id: 1, codigo: 'dashboard', nombre: 'Dashboard', url: '/src/modulo/ventas/dashboard/index.html', icono: '🏠', grupo: 'Ventas', orden: 1 },
     { id: 2, codigo: 'ventas-asignadas', nombre: 'Ventas Asignadas', url: '/src/modulo/ventas/ventas/index.html', icono: '🤝', grupo: 'Ventas', orden: 2 },
     { id: 3, codigo: 'historial-cliente', nombre: 'Historial Cliente', url: '/src/modulo/ventas/historial-cliente/index.html', icono: '📋', grupo: 'Ventas', orden: 3 },
   ];
 
+  const fakeProfiles = [
+    { id: 1, codigo: 'ventas', nombre: 'Ventas', descripcion: 'Base ventas', area: 'ventas', es_base: 1, activo: 1 },
+  ];
+
   test('devuelve token con credenciales válidas', async () => {
     mockDbQuery
-      .mockResolvedValueOnce([[fakeUser]])  // SELECT usuario
-      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]]) // SELECT vendedores
-      .mockResolvedValueOnce([fakeMenus]) // SELECT menus asignados
-      .mockResolvedValueOnce([fakeMenus]); // SELECT catálogo completo
+      .mockResolvedValueOnce([[fakeUser]])
+      .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]])
+      .mockResolvedValueOnce([fakeMenus])
+      .mockResolvedValueOnce([fakeProfiles])
+      .mockResolvedValueOnce([fakeMenus]);
     verifyPasswordDjango.mockReturnValueOnce(true);
 
     const res = await request(app)
@@ -86,6 +94,7 @@ describe('POST /api/auth/login', () => {
       .mockResolvedValueOnce([[fakeUser]])
       .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]])
       .mockResolvedValueOnce([fakeMenus])
+      .mockResolvedValueOnce([fakeProfiles])
       .mockResolvedValueOnce([fakeMenus]);
     verifyPasswordDjango.mockReturnValueOnce(true);
 
@@ -103,6 +112,7 @@ describe('POST /api/auth/login', () => {
       .mockResolvedValueOnce([[{ ...fakeUser, codigo: '629' }]])
       .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]])
       .mockResolvedValueOnce([fakeMenus])
+      .mockResolvedValueOnce([fakeProfiles])
       .mockResolvedValueOnce([fakeMenus]);
     verifyPasswordDjango.mockReturnValueOnce(true);
 
@@ -175,15 +185,54 @@ describe('POST /api/auth/login', () => {
       .send({ email: '' });
     expect(res.status).toBe(400);
   });
+
+  test('incluye menus de RRHH en user.menus y allMenus cuando el perfil los concede', async () => {
+    const rrhhUser = {
+      id: 8,
+      email: 'rrhh@texpro.cl',
+      nombre: 'Rosa RRHH',
+      password: 'pbkdf2_sha256$600000$saltABC$AAABBBCCC=',
+      area: 'RRHH',
+      is_admin: 0,
+      is_active: 1,
+    };
+    const rrhhMenus = [
+      { id: 20, codigo: 'rrhh', nombre: 'RRHH', url: '/src/modulo/rrhh/rrhh/index.html', icono: '👥', grupo: 'RRHH', orden: 1 },
+      { id: 21, codigo: 'rrhh_reportes_compartidos', nombre: 'Reportes ventas compartidas', url: '/src/modulo/rrhh/reportes-compartidos/index.html', icono: '📄', grupo: 'RRHH', orden: 2 },
+    ];
+    const rrhhProfiles = [
+      { id: 7, codigo: 'rrhh', nombre: 'RRHH', descripcion: 'Base rrhh', area: 'rrhh', es_base: 1, activo: 1 },
+    ];
+
+    mockDbQuery
+      .mockResolvedValueOnce([[rrhhUser]])
+      .mockResolvedValueOnce([[{ cod_vendedor: 'V008', tipo: 'P' }]])
+      .mockResolvedValueOnce([rrhhMenus])
+      .mockResolvedValueOnce([rrhhProfiles])
+      .mockResolvedValueOnce([rrhhMenus]);
+    verifyPasswordDjango.mockReturnValueOnce(true);
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'rrhh@texpro.cl', password: 'correcta123' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.user.menus).toHaveLength(2);
+    expect(res.body.allMenus).toHaveLength(2);
+    expect(res.body.user.menus.map(menu => menu.codigo)).toEqual(
+      expect.arrayContaining(['rrhh', 'rrhh_reportes_compartidos'])
+    );
+  });
 });
 
-// ── GET /api/auth/me ───────────────────────────────────────────────────────────
 describe('GET /api/auth/me', () => {
   test('devuelve perfil con token válido', async () => {
     mockDbQuery
       .mockResolvedValueOnce([[{ id: 1, email: 'ana@texpro.cl', nombre: 'Ana', is_active: 1, is_admin: 0 }]])
       .mockResolvedValueOnce([[{ cod_vendedor: 'V001', tipo: 'P' }]])
       .mockResolvedValueOnce([[{ id: 1, codigo: 'dashboard', nombre: 'Dashboard', url: '/src/modulo/ventas/dashboard/index.html', icono: '🏠', grupo: 'Ventas', orden: 1 }]])
+      .mockResolvedValueOnce([[{ id: 1, codigo: 'ventas', nombre: 'Ventas', descripcion: 'Base ventas', area: 'ventas', es_base: 1, activo: 1 }]])
       .mockResolvedValueOnce([[{ id: 2, codigo: 'ventas-asignadas', nombre: 'Ventas Asignadas', url: '/src/modulo/ventas/ventas/index.html', icono: '🤝', grupo: 'Ventas', orden: 2 }]]);
 
     const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET);
@@ -206,9 +255,29 @@ describe('GET /api/auth/me', () => {
       .set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(500);
   });
+
+  test('devuelve menus RRHH en me cuando el usuario tiene perfil rrhh', async () => {
+    mockDbQuery
+      .mockResolvedValueOnce([[{ id: 8, email: 'rrhh@texpro.cl', nombre: 'Rosa RRHH', area: 'rrhh', is_admin: 0, is_active: 1 }]])
+      .mockResolvedValueOnce([[{ cod_vendedor: 'V008', tipo: 'P' }]])
+      .mockResolvedValueOnce([[{ id: 20, codigo: 'rrhh', nombre: 'RRHH', url: '/src/modulo/rrhh/rrhh/index.html', icono: '👥', grupo: 'RRHH', orden: 1 }]])
+      .mockResolvedValueOnce([[{ id: 7, codigo: 'rrhh', nombre: 'RRHH', descripcion: 'Base rrhh', area: 'rrhh', es_base: 1, activo: 1 }]])
+      .mockResolvedValueOnce([[{ id: 20, codigo: 'rrhh', nombre: 'RRHH', url: '/src/modulo/rrhh/rrhh/index.html', icono: '👥', grupo: 'RRHH', orden: 1 }]]);
+
+    const token = jwt.sign({ sub: 8 }, process.env.JWT_SECRET);
+    const res = await request(app)
+      .get('/api/auth/me')
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.user.menus).toHaveLength(1);
+    expect(res.body.allMenus).toHaveLength(1);
+    expect(res.body.user.menus[0].codigo).toBe('rrhh');
+    expect(res.body.user.menus[0].grupo).toBe('RRHH');
+  });
 });
 
-// ── POST /api/auth/logout ──────────────────────────────────────────────────────
 describe('POST /api/auth/logout', () => {
   test('devuelve ok:true', async () => {
     const token = jwt.sign({ sub: 1 }, process.env.JWT_SECRET);

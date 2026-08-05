@@ -10,6 +10,8 @@
 
 const request = require('supertest');
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 
 // ── Mock requireAuth ──────────────────────────────────────────────────────────
 jest.mock('../../src/middlewares/requireAuth', () => ({
@@ -123,6 +125,81 @@ describe('GET /api/dashboard/evolucion — evolución mensual', () => {
     const res = await request(app).get('/api/dashboard/evolucion?anio=2025');
     expect(res.status).toBe(400);
   });
+
+  test('usa meta mensual si existe y prorratea la anual en los demás meses', async () => {
+    mockQuery.mockResolvedValueOnce([[
+      {
+        id: 1,
+        usuario_id: 1,
+        fecha: '2026-01-01',
+        tipo_periodo: 'anual',
+        meta: 40613761,
+        activo: 1,
+      },
+      {
+        id: 2,
+        usuario_id: 1,
+        fecha: '2026-03-01',
+        tipo_periodo: 'mensual',
+        meta: 650000,
+        activo: 1,
+      },
+    ]]);
+    mockSoftlandRequest.query.mockResolvedValueOnce({
+      recordset: [
+        { mes: 1, ventas: 1000 },
+        { mes: 3, ventas: 3000 },
+      ],
+    });
+
+    const res = await request(app).get('/api/dashboard/evolucion?anio=2026');
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.evolucion).toHaveLength(12);
+    expect(res.body.evolucion[0].meta).toBe(40613761);
+    expect(res.body.evolucion[0].meta_mes).toBe(40613761);
+    expect(res.body.evolucion[2].meta).toBe(650000);
+    expect(res.body.evolucion[2].meta_mes).toBe(650000);
+    expect(res.body.evolucion[0].prorrateada).toBe(false);
+    expect(res.body.evolucion[2].tipo_meta).toBe('mensual');
+  });
+});
+
+describe('GET /api/dashboard/vendedores — ventas por vendedor', () => {
+  test('retorna lista vacía cuando el mes no tiene ventas y no arrastra datos anteriores', async () => {
+    mockSoftlandRequest.query.mockResolvedValueOnce({ recordset: [] });
+
+    const res = await request(app).get('/api/dashboard/vendedores?mes=9&anio=2026');
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(Array.isArray(res.body.vendedores)).toBe(true);
+    expect(res.body.vendedores).toHaveLength(0);
+  });
+});
+
+describe('GET /api/dashboard/vendedores-todos — lista completa para compartir', () => {
+  test('deduplica por usuario y conserva un código representativo', async () => {
+    mockQuery.mockResolvedValueOnce([[
+      { usuario_id: 1, nombre: 'ADRIANA PERRET', cod_vendedor: '03' },
+      { usuario_id: 1, nombre: 'ADRIANA PERRET', cod_vendedor: '5003' },
+      { usuario_id: 2, nombre: 'ALICIA RUZ', cod_vendedor: '202' },
+      { usuario_id: 2, nombre: 'ALICIA RUZ', cod_vendedor: '5202' },
+      { usuario_id: 3, nombre: 'ANDREA PONCE', cod_vendedor: '358' },
+    ]]);
+
+    const res = await request(app).get('/api/dashboard/vendedores-todos');
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+    expect(res.body.vendedores).toHaveLength(3);
+    expect(res.body.vendedores).toEqual([
+      { cod: '03', nombre: 'ADRIANA PERRET' },
+      { cod: '202', nombre: 'ALICIA RUZ' },
+      { cod: '358', nombre: 'ANDREA PONCE' },
+    ]);
+  });
 });
 
 // ── POST /api/dashboard/compartir — asigna porcentaje a folio ────────────────
@@ -146,6 +223,36 @@ describe('POST /api/dashboard/compartir — asigna porcentaje a folio', () => {
       .post('/api/dashboard/compartir')
       .send({ folio: 1001, cod_vendedor_compartido: 'V002', porcentaje: 150 });
     expect(res.status).toBe(400);
+  });
+});
+
+describe('dashboard.js — formateo de descuentos en el modal de detalle', () => {
+  test('usa un helper seguro que permite descuentos negativos', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../src/modulo/ventas/dashboard/dashboard.js'),
+      'utf8'
+    );
+
+    expect(source).toContain('function formatPctDescuento(valor)');
+    expect(source).toContain("if (valor === null || valor === undefined || valor === '') return '-';");
+    expect(source).toContain('return `${Math.round(n)}%`;');
+    expect(source).toContain('formatPctDescuento(l.dcto ?? l.Dcto)');
+    expect(source).not.toContain('Number.isFinite(Number(l.dcto)) && Number(l.dcto) > 0');
+  });
+});
+
+describe('dashboard.js — limpieza de Ventas por Vendedor', () => {
+  test('resetea tbody y footer antes de pintar nuevos datos', () => {
+    const source = fs.readFileSync(
+      path.join(__dirname, '../../src/modulo/ventas/dashboard/dashboard.js'),
+      'utf8'
+    );
+
+    expect(source).toContain('function renderVendedoresFooter(totalVentas = 0, ventaRealLista = 0, descuento = null)');
+    expect(source).toContain('function renderVendedoresVacios()');
+    expect(source).toContain('renderVendedoresVacios();');
+    expect(source).toContain("if (!data.ok || !Array.isArray(data.vendedores) || !data.vendedores.length)");
+    expect(source).toContain('renderVendedoresFooter(sumVentas, sumLista, descuento);');
   });
 });
 

@@ -2,10 +2,16 @@
 /**
  * tests/login/login.test.js
  *
- * Pruebas de validación de formulario de login (lógica frontend pura).
+ * Pruebas de validación de formulario de login y resolución de ruta inicial.
  */
 
-// ── helpers que replican la validación del formulario ──────────────────────────
+const {
+  resolverRutaPrincipalUsuario,
+  resolverRutaInicialUsuario,
+  FALLBACK_URL,
+} = require('../../src/modulo/varios/login/login-routes');
+
+// ── helpers que replican la validación del formulario ─────────────────────────
 function validarEmail(email) {
   if (!email || !email.trim()) return 'El email es obligatorio';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return 'Email inválido';
@@ -42,5 +48,85 @@ describe('formulario de login', () => {
 
   test('contraseña con contenido retorna null', () => {
     expect(validarPassword('secreto123')).toBeNull();
+  });
+});
+
+describe('resolverRutaInicialUsuario', () => {
+  test('prioriza la ruta base del area cuando esta permitida', () => {
+    const user = {
+      area: 'Ventas',
+      menus: [
+        { id: 10, url: '/src/modulo/ventas/dashboard/index.html' },
+        { id: 11, url: '/src/modulo/ventas/ventas/index.html' },
+      ],
+    };
+
+    expect(resolverRutaInicialUsuario(user)).toBe('/src/modulo/ventas/dashboard/index.html');
+  });
+
+  test('si no existe ruta base permitida, usa el primer menu util', () => {
+    const user = {
+      area: 'Operaciones',
+      menus: [
+        { id: 20, url: '/src/modulo/ventas/ventas/index.html' },
+        { id: 21, url: '/src/modulo/ventas/historial-cliente/index.html' },
+      ],
+    };
+
+    expect(resolverRutaInicialUsuario(user)).toBe('/src/modulo/ventas/ventas/index.html');
+  });
+
+  test('devuelve fallback cuando no hay menus', () => {
+    expect(resolverRutaInicialUsuario({ area: 'Ventas', menus: [] })).toBe(FALLBACK_URL);
+    expect(resolverRutaInicialUsuario(null)).toBe(FALLBACK_URL);
+  });
+});
+
+describe('resolverRutaPrincipalUsuario', () => {
+  test('ventas usa el dashboard como modulo principal', () => {
+    const user = {
+      area: 'Ventas',
+      menus: [
+        { id: 1, codigo: 'ventas_dashboard', url: '/src/modulo/ventas/dashboard/index.html', orden: 1 },
+        { id: 2, codigo: 'ventas_asignadas', url: '/src/modulo/ventas/ventas/index.html', orden: 2 },
+      ],
+    };
+
+    expect(resolverRutaPrincipalUsuario(user)).toBe('/src/modulo/ventas/dashboard/index.html');
+  });
+
+  test('admin acepta administracion o admin como area principal', () => {
+    const user = {
+      area: 'Administración',
+      menus: [
+        { id: 11, codigo: 'admin', url: '/src/modulo/admin/admin/index.html', orden: 2 },
+        { id: 12, codigo: 'alertas', grupo: 'general', url: '/src/modulo/varios/alertas/index.html', orden: 1 },
+      ],
+    };
+
+    expect(resolverRutaPrincipalUsuario(user)).toBe('/src/modulo/admin/admin/index.html');
+  });
+
+  test('si solo existe alertas, no la usa como ruta principal', () => {
+    const user = {
+      area: 'Operaciones',
+      menus: [
+        { id: 50, codigo: 'alertas', grupo: 'general', url: '/src/modulo/varios/alertas/index.html', orden: 1 },
+      ],
+    };
+
+    expect(resolverRutaPrincipalUsuario(user)).toBeNull();
+  });
+
+  test('general puede usarse como ruta principal cuando existe el modulo', () => {
+    const user = {
+      area: 'General',
+      menus: [
+        { id: 60, codigo: 'general', grupo: 'General', url: '/src/modulo/general/general/index.html', orden: 1 },
+      ],
+    };
+
+    expect(resolverRutaPrincipalUsuario(user)).toBe('/src/modulo/general/general/index.html');
+    expect(resolverRutaInicialUsuario(user)).toBe('/src/modulo/general/general/index.html');
   });
 });

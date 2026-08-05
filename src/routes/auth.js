@@ -4,9 +4,7 @@
  * routes/auth.js
  *
  * Endpoints de autenticación:
- *   POST /api/auth/login        — Inicio de sesión (email + password)
  *   GET  /api/auth/me           — Perfil del usuario autenticado
- *   POST /api/auth/logout       — Cierre de sesión (client-side)
  *   POST /api/auth/refresh      — Renovación silenciosa de token JWT
  */
 
@@ -32,7 +30,7 @@ function logLoginFailure(motivo, detalle = {}) {
     email: detalle.email || '',
     passwordState: detalle.passwordState || '',
   };
-  console.warn(`[POST /api/auth/login] ${motivo}`, logData);
+  console.warn('[AUTH] login failure:', motivo, logData);
 }
 
 function describirPasswordGuardado(encoded) {
@@ -55,6 +53,17 @@ function normalizarVendedores(vendedores) {
   }));
 }
 
+function grupoNormalizado(menu) {
+  const codigo = String(menu?.codigo || '').trim();
+  const grupo = String(menu?.grupo || 'General').trim() || 'General';
+
+  if (codigo === 'rrhh' || codigo === 'rrhh_reportes_compartidos') {
+    return 'RRHH';
+  }
+
+  return grupo;
+}
+
 function normalizarMenus(menus) {
   return (menus || [])
     .map(menu => ({
@@ -63,7 +72,7 @@ function normalizarMenus(menus) {
       nombre: String(menu?.nombre || '').trim(),
       url: String(menu?.url || '').trim(),
       icono: String(menu?.icono || '').trim(),
-      grupo: String(menu?.grupo || 'General').trim() || 'General',
+      grupo: grupoNormalizado(menu),
       orden: Number(menu?.orden ?? 0) || 0,
     }))
     .filter(menu => menu.id !== null && menu.url);
@@ -79,16 +88,54 @@ async function cargarMenusAsignados(usuarioId) {
         m.icono,
         m.grupo,
         m.orden
-     FROM usuario_menu um
-     INNER JOIN menu m ON m.id = um.menu_id
-     WHERE um.usuario_id = ?
-       AND um.activo = 1
-       AND m.activo = 1
+     FROM menu m
+     INNER JOIN (
+       SELECT um.menu_id
+       FROM usuario_menu um
+       WHERE um.usuario_id = ?
+         AND um.activo = 1
+       UNION
+       SELECT pm.menu_id
+       FROM usuario_perfil up
+       INNER JOIN perfil p ON p.id = up.perfil_id
+       INNER JOIN perfil_menu pm ON pm.perfil_id = p.id
+       WHERE up.usuario_id = ?
+         AND up.activo = 1
+         AND p.activo = 1
+         AND pm.activo = 1
+     ) accesos ON accesos.menu_id = m.id
+     WHERE m.activo = 1
      ORDER BY m.orden ASC, m.grupo ASC, m.nombre ASC`,
-    [usuarioId]
+    [usuarioId, usuarioId]
   );
 
   return normalizarMenus(rows);
+}
+
+async function cargarPerfilesAsignados(usuarioId) {
+  const [rows] = await db.pool.query(
+    `SELECT DISTINCT
+        p.id,
+        p.codigo,
+        p.nombre,
+        p.descripcion,
+        p.activo
+     FROM usuario_perfil up
+     INNER JOIN perfil p ON p.id = up.perfil_id
+     WHERE up.usuario_id = ?
+       AND up.activo = 1
+       AND p.activo = 1
+     ORDER BY p.nombre ASC`,
+    [usuarioId]
+  );
+
+  return (rows || []).map(perfil => ({
+    id: Number(perfil?.id) || perfil?.id || null,
+    codigo: String(perfil?.codigo || '').trim(),
+    nombre: String(perfil?.nombre || '').trim(),
+    descripcion: String(perfil?.descripcion || '').trim(),
+    activo: Boolean(Number(perfil?.activo)),
+  })).filter(perfil => perfil.id !== null);
 }
 
 async function cargarCatalogoMenus() {
@@ -110,15 +157,16 @@ async function cargarCatalogoMenus() {
 }
 
 async function cargarMenusUsuario(usuarioId) {
-  const [menus, allMenus] = await Promise.all([
+  const [menus, perfiles, allMenus] = await Promise.all([
     cargarMenusAsignados(usuarioId),
+    cargarPerfilesAsignados(usuarioId),
     cargarCatalogoMenus(),
   ]);
 
-  return { menus, allMenus };
+  return { menus, perfiles, allMenus };
 }
 
-// â”€â”€ POST /api/auth/login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- POST /api/auth/login ---------------------------------------------------
 router.post('/login', async (req, res) => {
   // Acepta tanto { email } (frontend actual) como { usuario } (retrocompat)
   const { email, usuario, password } = req.body;
@@ -170,7 +218,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos' });
     }
 
-    // Las contraseÃ±as estÃ¡n en formato PBKDF2-SHA256 de Django (600.000 iter)
+    // Las contraseñas están en formato PBKDF2-SHA256 de Django (600.000 iter)
     const match = verifyPasswordDjango(password, user.password);
     if (!match) {
       logLoginFailure('password_incorrecta', {
@@ -182,7 +230,7 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos' });
     }
 
-    // Registrar Ãºltimo acceso
+    // Registrar último acceso
     await updateLastLogin(user.id);
 
     // Cargar vendedores asociados
@@ -191,7 +239,7 @@ router.post('/login', async (req, res) => {
       [user.id]
     );
     const vendedoresNormalizados = normalizarVendedores(vendedores);
-    const { menus, allMenus } = await cargarMenusUsuario(user.id);
+    const { menus, perfiles, allMenus } = await cargarMenusUsuario(user.id);
 
     const payload = {
       id:        user.id,
@@ -201,6 +249,7 @@ router.post('/login', async (req, res) => {
       area:      user.area,
       is_admin:  user.is_admin,
       vendedores: vendedoresNormalizados,
+      perfiles,
       menus,
     };
 
@@ -219,7 +268,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// â”€â”€ GET /api/auth/me â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- GET /api/auth/me -------------------------------------------------------
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const [rows] = await db.pool.query(
@@ -236,24 +285,24 @@ router.get('/me', requireAuth, async (req, res) => {
       [user.id]
     );
     const vendedoresNormalizados = normalizarVendedores(vendedores);
-    const { menus, allMenus } = await cargarMenusUsuario(user.id);
-    res.json({ ok: true, user: { ...user, vendedores: vendedoresNormalizados, menus }, allMenus });
+    const { menus, perfiles, allMenus } = await cargarMenusUsuario(user.id);
+    res.json({ ok: true, user: { ...user, vendedores: vendedoresNormalizados, perfiles, menus }, allMenus });
   } catch (err) {
     console.error('[GET /api/auth/me]', err.message);
     res.status(500).json({ ok: false, error: 'Error interno' });
   }
 });
 
-// â”€â”€ POST /api/auth/logout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- POST /api/auth/logout --------------------------------------------------
 // JWT es stateless; logout se gestiona borrando el token en el cliente.
 router.post('/logout', requireAuth, (_req, res) => {
   res.json({ ok: true, message: 'Sesión cerrada' });
 });
 
-// â”€â”€ POST /api/auth/refresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// POST /api/auth/refresh
 /**
- * RenovaciÃ³n silenciosa de token JWT.
- * Acepta tokens expirados hace menos de 24h con firma vÃ¡lida.
+ * Renovación silenciosa de token JWT.
+ * Acepta tokens expirados hace menos de 24h con firma válida.
  * Verifica is_active en BD antes de emitir nuevo token.
  */
 router.post('/refresh', async (req, res) => {
@@ -268,7 +317,7 @@ router.post('/refresh', async (req, res) => {
   try {
     decoded = jwt.verify(token, JWT_SECRET, { ignoreExpiration: true });
   } catch {
-    return res.status(401).json({ ok: false, error: 'Token invÃ¡lido' });
+    return res.status(401).json({ ok: false, error: 'Token inválido' });
   }
 
   const ahora       = Math.floor(Date.now() / 1000);
@@ -295,7 +344,7 @@ router.post('/refresh', async (req, res) => {
       [user.id]
     );
     const vendedoresNormalizados = normalizarVendedores(vendedores);
-    const { menus, allMenus } = await cargarMenusUsuario(user.id);
+    const { menus, perfiles, allMenus } = await cargarMenusUsuario(user.id);
     const nuevoPayload = {
       id:        user.id,
       sub:       user.id,
@@ -304,6 +353,7 @@ router.post('/refresh', async (req, res) => {
       area:      user.area,
       is_admin:  user.is_admin,
       vendedores: vendedoresNormalizados,
+      perfiles,
       menus,
     };
     const nuevoToken = jwt.sign(nuevoPayload, JWT_SECRET, { expiresIn: JWT_EXPIRES });

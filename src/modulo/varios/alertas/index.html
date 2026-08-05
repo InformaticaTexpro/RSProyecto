@@ -24,7 +24,7 @@
     <nav class="sidebar-nav" id="sidebarNav"></nav>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="user-avatar" id="userAvatar">?</div>
+        <div class="user-avatar" id="userAvatar">T</div>
         <div class="user-info">
           <span class="user-name" id="userName">Cargando...</span>
           <span class="user-area" id="userArea"></span>
@@ -48,7 +48,7 @@
       <div class="header-right">
         <span class="header-date" id="headerDate"></span>
         <div class="header-user-chip">
-          <div class="chip-avatar" id="chipAvatar">?</div>
+          <div class="chip-avatar" id="chipAvatar">T</div>
           <span class="chip-name" id="chipName">...</span>
         </div>
       </div>
@@ -72,6 +72,7 @@
       <div class="alertas-filtros">
         <button class="filtro-btn filtro-btn--active" data-filtro="todas">Todas</button>
         <button class="filtro-btn" data-filtro="activas">Activas</button>
+        <button class="filtro-btn" data-filtro="archivadas">Archivadas</button>
         <button class="filtro-btn" data-filtro="proximas">⚠️ Próximas a vencer</button>
         <button class="filtro-btn" data-filtro="completadas">✅ Completadas</button>
         <button class="filtro-btn" data-filtro="grupales">👥 Grupales</button>
@@ -175,6 +176,7 @@
   </div>
 
   <script src="../../../assets/js/app-sidebar.js?v=1.0.0"></script>
+  <script src="../../../assets/js/realtime-client.js?v=1.0.0"></script>
   <script src="alertas.js?v=2.1.0"></script>
   <script src="../../../assets/js/inactividad.js?v=1.0.0"></script>
 </body>

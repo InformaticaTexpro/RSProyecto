@@ -26,6 +26,7 @@
   // ── Configuración ────────────────────────────────────────────
   const API_BASE  = window.API_BASE || window.location.origin;
   const LOGIN_URL = `${API_BASE}/api/auth/login`;
+
   const GERENCIA_URL = '/src/modulo/gerencia/dashboard-comercial/index.html';
 
   const MODULOS_PRINCIPALES = {
@@ -49,6 +50,53 @@
   };
 
   const DASHBOARD_URL = '../../ventas/dashboard/index.html';
+
+  const loginRouter = window.TEXPRO_LOGIN_ROUTER || {};
+  const resolverRutaInicialUsuario = typeof loginRouter.resolverRutaInicialUsuario === 'function'
+    ? loginRouter.resolverRutaInicialUsuario
+    : function (user) {
+      const menus = Array.isArray(user?.menus) ? user.menus : [];
+      const normalizar = (valor) => String(valor || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+      const area = normalizar(user?.area);
+      const rutas = {
+        ventas: '/src/modulo/ventas/dashboard/index.html',
+        venta: '/src/modulo/ventas/dashboard/index.html',
+        vendedores: '/src/modulo/ventas/dashboard/index.html',
+        comercial: '/src/modulo/ventas/dashboard/index.html',
+        gerencia: '/src/modulo/ventas/dashboard/index.html',
+        produccion: '/src/modulo/produccion/produccion/index.html',
+        bodega: '/src/modulo/bodega/bodega/index.html',
+        facturacion: '/src/modulo/facturacion/facturacion/index.html',
+        rrhh: '/src/modulo/rrhh/rrhh/index.html',
+        'recursos_humanos': '/src/modulo/rrhh/rrhh/index.html',
+        general: '/src/modulo/general/general/index.html',
+        contabilidad: '/src/modulo/contabilidad/contabilidad/index.html',
+        cobranza: '/src/modulo/contabilidad/contabilidad/index.html',
+        servicio_tecnico: '/src/modulo/servtecnico/servicio-tecnico/index.html',
+        servicio: '/src/modulo/servtecnico/servicio-tecnico/index.html',
+        'serv_tecnico': '/src/modulo/servtecnico/servicio-tecnico/index.html',
+        administracion: '/src/modulo/admin/admin/index.html',
+        admin: '/src/modulo/admin/admin/index.html',
+      };
+      const rutaPreferida = rutas[area];
+      if (rutaPreferida && menus.some(menu => String(menu?.url || '') === rutaPreferida)) {
+        return rutaPreferida;
+      }
+
+      const menusUtiles = menus
+      .filter(menu => normalizar(menu?.codigo) !== 'alertas' && normalizar(menu?.codigo) !== 'mensajeria' && String(menu?.url || '').trim())
+      .sort((a, b) => (Number(a?.orden ?? 0) - Number(b?.orden ?? 0)) || String(a?.nombre || '').localeCompare(String(b?.nombre || ''), 'es'));
+      if (menusUtiles.length) return menusUtiles[0].url;
+
+      return '/src/sin-acceso.html';
+    };
+
 
   // ── Referencias DOM ───────────────────────────────────────
   const form         = document.getElementById('loginForm');
@@ -91,6 +139,7 @@
     btnLoader.style.display = state ? 'flex' : 'none';
   }
 
+
   function normalizarArea(area) {
     return String(area || '')
       .trim()
@@ -122,6 +171,7 @@
     }
     return MODULOS_PRINCIPALES[area] || DASHBOARD_URL;
   }
+
 
   function guardarUsuario(user) {
     if (!user) return;
@@ -180,7 +230,7 @@
       guardarUsuario(data.user);
 
       // ── Redirigir al módulo principal ───────────────────────────
-      window.location.href = getModuloPrincipal(data.user);
+      window.location.href = resolverRutaInicialUsuario(data.user);
 
     } catch (err) {
       console.error('[login] Error de red:', err);
