@@ -28,10 +28,13 @@
     "express-rate-limit": "^8.3.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "mssql": "^11.0.1",
     "multer": "^2.2.0",
     "mysql2": "^3.11.0",
-    "puppeteer": "^24.43.1"
+    "puppeteer": "^24.43.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

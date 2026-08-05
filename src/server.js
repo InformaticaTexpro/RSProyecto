@@ -27,6 +27,7 @@ const notificacionesRoutes  = require('./routes/notificaciones');
 const carteraRoutes         = require('./routes/cartera');
 const alertasRoutes         = require('./routes/alertas');
 const indicadoresRoutes     = require('./routes/indicadores');
+const gerenciaRoutes        = require('./routes/gerencia');
 
 const vendedoresRoutes      = require('./routes/vendedores');   // ← NUEVO
 const rrhhRoutes            = require('./routes/rrhh');
@@ -155,6 +156,7 @@ app.use('/api/notificaciones',  notificacionesRoutes);
 app.use('/api/cartera',         carteraRoutes);
 app.use('/api/alertas',         alertasRoutes);
 app.use('/api/indicadores',     indicadoresRoutes);
+app.use('/api/gerencia',        gerenciaRoutes);
 
 app.use('/api/vendedores',      vendedoresRoutes);   // ← NUEVO
 app.use('/api/rrhh',            rrhhRoutes);

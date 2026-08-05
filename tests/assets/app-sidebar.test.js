@@ -85,4 +85,55 @@ describe('app-sidebar', () => {
     expect(facturacion.getAttribute('href')).toContain('/src/modulo/varios/sin-acceso/index.html');
     expect(facturacion.classList.contains('is-locked')).toBe(true);
   });
+
+  test('construye Gerencia con tres niveles y expande la ruta activa', async () => {
+    await ejecutarSidebar({
+      ruta: '/src/modulo/gerencia/comercial/estadisticas-ventas/index.html',
+      user: {
+        id: 10,
+        nombre: 'Gerencia QA',
+        area: 'Gerencia',
+        menus: [],
+      },
+      allMenus: [
+        { id: 7, codigo: 'gerencia', nombre: 'Gerencia', url: '/src/modulo/gerencia/index.html', icono: '📈', grupo: 'Gerencia', orden: 1 },
+      ],
+    });
+
+    const modulosGerencia = Array.from(document.querySelectorAll('.nav-module'))
+      .filter(modulo => modulo.querySelector('.nav-module-label')?.textContent === 'Gerencia');
+    expect(modulosGerencia).toHaveLength(1);
+    expect(modulosGerencia[0].classList.contains('is-open')).toBe(true);
+    expect(Array.from(modulosGerencia[0].querySelectorAll('.nav-nested-label')).map(
+      elemento => elemento.textContent
+    )).toEqual(['Comercial', 'Finanzas']);
+    expect(modulosGerencia[0].textContent).toContain('Estadísticas de Ventas');
+    expect(modulosGerencia[0].querySelectorAll('.nav-subitem')).toHaveLength(3);
+
+    const activa = modulosGerencia[0].querySelector('.nav-subitem.active');
+    expect(activa.getAttribute('href')).toBe(
+      '/src/modulo/gerencia/comercial/estadisticas-ventas/index.html'
+    );
+    expect(activa.closest('.nav-nested').classList.contains('is-open')).toBe(true);
+  });
+
+  test('mantiene las opciones de Gerencia visibles y bloqueadas para otras áreas', async () => {
+    await ejecutarSidebar({
+      ruta: '/src/modulo/ventas/dashboard/index.html',
+      user: {
+        id: 20,
+        nombre: 'Ventas QA',
+        area: 'Ventas',
+        menus: [],
+      },
+      allMenus: [],
+    });
+
+    const enlacesGerencia = Array.from(document.querySelectorAll('.nav-subitem'))
+      .filter(enlace => enlace.getAttribute('href')?.includes('modulo='));
+    expect(enlacesGerencia.filter(enlace => (
+      enlace.textContent.includes('Estadísticas de Ventas')
+      || enlace.textContent.includes('Dashboard')
+    ))).toHaveLength(3);
+  });
 });

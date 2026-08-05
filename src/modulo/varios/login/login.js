@@ -26,6 +26,7 @@
   // ── Configuración ────────────────────────────────────────────
   const API_BASE  = window.API_BASE || window.location.origin;
   const LOGIN_URL = `${API_BASE}/api/auth/login`;
+  const GERENCIA_URL = '/src/modulo/gerencia/dashboard-comercial/index.html';
 
   const MODULOS_PRINCIPALES = {
     ventas: '../../ventas/dashboard/index.html',
@@ -44,7 +45,7 @@
     'serv-tecnico': '../../servtecnico/servicio-tecnico/index.html',
     admin: '../../admin/admin/index.html',
     administracion: '../../admin/admin/index.html',
-    gerencia: '../../ventas/dashboard/index.html',
+    gerencia: GERENCIA_URL,
   };
 
   const DASHBOARD_URL = '../../ventas/dashboard/index.html';
@@ -99,7 +100,19 @@
       .replace(/\s+/g, '-');
   }
 
+  function esAdministrador(user) {
+    return user?.is_admin === true
+      || user?.is_admin === 1
+      || user?.is_admin === '1'
+      || normalizarArea(user?.area) === 'admin';
+  }
+
+  function debeIngresarAGerencia(user) {
+    return esAdministrador(user) || normalizarArea(user?.area) === 'gerencia';
+  }
+
   function getModuloPrincipal(user) {
+    if (debeIngresarAGerencia(user)) return GERENCIA_URL;
     const area = normalizarArea(user?.area);
     if (area === 'admin' || area === 'administracion') {
       return DASHBOARD_URL;
