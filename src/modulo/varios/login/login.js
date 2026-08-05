@@ -26,6 +26,31 @@
   // ── Configuración ────────────────────────────────────────────
   const API_BASE  = window.API_BASE || window.location.origin;
   const LOGIN_URL = `${API_BASE}/api/auth/login`;
+
+  const GERENCIA_URL = '/src/modulo/gerencia/dashboard-comercial/index.html';
+
+  const MODULOS_PRINCIPALES = {
+    ventas: '../../ventas/dashboard/index.html',
+    venta: '../../ventas/dashboard/index.html',
+    vendedores: '../../ventas/dashboard/index.html',
+    comercial: '../../ventas/dashboard/index.html',
+    produccion: '../../produccion/produccion/index.html',
+    bodega: '../../bodega/bodega/index.html',
+    facturacion: '../../facturacion/facturacion/index.html',
+    rrhh: '../../rrhh/rrhh/index.html',
+    'recursos-humanos': '../../rrhh/rrhh/index.html',
+    contabilidad: '../../contabilidad/contabilidad/index.html',
+    cobranza: '../../contabilidad/contabilidad/index.html',
+    'servicio-tecnico': '../../servtecnico/servicio-tecnico/index.html',
+    servicio: '../../servtecnico/servicio-tecnico/index.html',
+    'serv-tecnico': '../../servtecnico/servicio-tecnico/index.html',
+    admin: '../../admin/admin/index.html',
+    administracion: '../../admin/admin/index.html',
+    gerencia: GERENCIA_URL,
+  };
+
+  const DASHBOARD_URL = '../../ventas/dashboard/index.html';
+
   const loginRouter = window.TEXPRO_LOGIN_ROUTER || {};
   const resolverRutaInicialUsuario = typeof loginRouter.resolverRutaInicialUsuario === 'function'
     ? loginRouter.resolverRutaInicialUsuario
@@ -72,6 +97,7 @@
       return '/src/sin-acceso.html';
     };
 
+
   // ── Referencias DOM ───────────────────────────────────────
   const form         = document.getElementById('loginForm');
   const inputUsuario = document.getElementById('usuario');
@@ -112,6 +138,40 @@
     btnText.style.display   = state ? 'none' : 'flex';
     btnLoader.style.display = state ? 'flex' : 'none';
   }
+
+
+  function normalizarArea(area) {
+    return String(area || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '-');
+  }
+
+  function esAdministrador(user) {
+    return user?.is_admin === true
+      || user?.is_admin === 1
+      || user?.is_admin === '1'
+      || normalizarArea(user?.area) === 'admin';
+  }
+
+  function debeIngresarAGerencia(user) {
+    return esAdministrador(user) || normalizarArea(user?.area) === 'gerencia';
+  }
+
+  function getModuloPrincipal(user) {
+    if (debeIngresarAGerencia(user)) return GERENCIA_URL;
+    const area = normalizarArea(user?.area);
+    if (area === 'admin' || area === 'administracion') {
+      return DASHBOARD_URL;
+    }
+    if (!MODULOS_PRINCIPALES[area] && user?.is_admin) {
+      return DASHBOARD_URL;
+    }
+    return MODULOS_PRINCIPALES[area] || DASHBOARD_URL;
+  }
+
 
   function guardarUsuario(user) {
     if (!user) return;

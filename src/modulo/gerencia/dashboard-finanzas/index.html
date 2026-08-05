@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Texpro — Dashboard Finanzas</title>
+  <link rel="icon" type="image/jpg" href="/src/assets/images/Isotipo-TEXPRO_fondo_blanco.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Open+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/assets/styles/tokens.css?v=2.3.1" />
+  <link rel="stylesheet" href="/src/modulo/ventas/dashboard/dashboard.css?v=2.3.7" />
+  <link rel="stylesheet" href="/src/modulo/gerencia/assets/gerencia.css?v=1.0.0" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="auth-pending" data-dashboard="finanzas">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="/src/assets/images/Isotipo-TEXPRO_fondo_blanco.png" alt="Texpro" class="sidebar-logo" onerror="this.style.display='none'" />
+      <span class="sidebar-brand">TEXPRO</span>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Colapsar menú"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+    </div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user"><div class="user-avatar" id="userAvatar">?</div><div class="user-info"><span class="user-name" id="userName">Cargando...</span><span class="user-area" id="userArea"></span></div></div>
+      <button class="btn-logout" id="btnLogout" title="Cerrar sesión"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg><span class="btn-logout-text">Cerrar sesión</span></button>
+    </div>
+  </aside>
+
+  <div class="main-wrapper" id="mainWrapper">
+    <header class="main-header">
+      <div class="header-left"><button class="header-menu-btn" id="headerMenuBtn" aria-label="Menú móvil"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button><h1 class="header-title">Dashboard Finanzas</h1></div>
+      <div class="header-right"><span class="header-date" id="headerDate"></span><span class="header-indicadores" id="headerIndicadores" aria-label="Indicadores económicos"><span class="hind-label">USD</span><span class="hind-valor">—</span><span class="hind-sep" aria-hidden="true">|</span><span class="hind-label">UF</span><span class="hind-valor">—</span></span><div class="header-user-chip"><div class="chip-avatar" id="chipAvatar">?</div><span class="chip-name" id="chipName">...</span></div></div>
+    </header>
+
+    <main class="main-content">
+      <section class="gerencia-banner" aria-labelledby="tituloDashboard"><div><h2 id="tituloDashboard">Dashboard Finanzas</h2><p>Vista ejecutiva de ingresos, egresos y flujo financiero.</p></div><span class="mock-badge">Datos simulados</span></section>
+
+      <section class="gerencia-filtros" aria-label="Filtros financieros"><div class="gerencia-filtro"><label for="filtroAnio">Año</label><select class="filtro-select" id="filtroAnio"></select></div><button class="btn-buscar" id="btnActualizar" type="button">Actualizar vista</button></section>
+
+      <section class="kpis-grid gerencia-kpis" aria-label="Indicadores financieros">
+        <article class="kpi-card"><div class="kpi-icono kpi-icono--verde">$</div><div class="kpi-info"><span class="kpi-label">Ingresos acumulados</span><span class="kpi-valor" id="kpiIngresos">—</span></div></article>
+        <article class="kpi-card"><div class="kpi-icono kpi-icono--rojo">$</div><div class="kpi-info"><span class="kpi-label">Egresos acumulados</span><span class="kpi-valor" id="kpiEgresos">—</span></div></article>
+        <article class="kpi-card"><div class="kpi-icono kpi-icono--azul">↗</div><div class="kpi-info"><span class="kpi-label">Flujo neto</span><span class="kpi-valor" id="kpiFlujoNeto">—</span></div></article>
+        <article class="kpi-card"><div class="kpi-icono kpi-icono--naranja">+</div><div class="kpi-info"><span class="kpi-label">Cuentas por cobrar</span><span class="kpi-valor" id="kpiPorCobrar">—</span></div></article>
+        <article class="kpi-card"><div class="kpi-icono kpi-icono--rojo">−</div><div class="kpi-info"><span class="kpi-label">Cuentas por pagar</span><span class="kpi-valor" id="kpiPorPagar">—</span></div></article>
+        <article class="kpi-card"><div class="kpi-icono kpi-icono--morado">÷</div><div class="kpi-info"><span class="kpi-label">Liquidez</span><span class="kpi-valor" id="kpiLiquidez">—</span><small class="gerencia-kpi-ayuda">Cobrar / pagar</small></div></article>
+      </section>
+
+      <div class="gerencia-grid">
+        <section class="grafico-seccion"><div class="grafico-card"><div class="grafico-header"><h3 class="grafico-titulo">Flujo de caja</h3><p class="grafico-descripcion">Ingresos y egresos mensuales simulados.</p></div><div class="grafico-wrapper"><canvas id="graficoFlujoCaja"></canvas></div></div></section>
+        <section class="grafico-seccion"><div class="grafico-card"><div class="grafico-header"><h3 class="grafico-titulo">Distribución de egresos</h3><p class="grafico-descripcion">Participación por categoría.</p></div><div class="grafico-wrapper"><canvas id="graficoEgresos"></canvas></div></div></section>
+      </div>
+
+      <section class="tabla-seccion"><div class="tabla-card"><div class="tabla-header"><div><h3 class="tabla-titulo">Compromisos financieros</h3><p class="gerencia-subtitulo">Cuentas ficticias del año seleccionado.</p></div></div><div class="tabla-wrapper"><table class="dash-tabla"><thead><tr><th>Concepto</th><th>Tipo</th><th>Monto</th><th>Vencimiento</th><th>Estado</th><th>Responsable</th></tr></thead><tbody id="tablaFinanzasBody"></tbody></table></div></div></section>
+    </main>
+  </div>
+
+  <script src="/src/assets/js/app-sidebar.js?v=1.2.0"></script>
+  <script src="/src/modulo/gerencia/assets/gerencia-mock-data.js?v=1.0.0"></script>
+  <script src="/src/modulo/gerencia/assets/gerencia-dashboard.js?v=1.0.0"></script>
+  <script src="/src/assets/js/inactividad.js?v=2.3.0"></script>
+  <script src="/src/assets/js/indicadores-header.js?v=1.0.0"></script>
+</body>
+</html>

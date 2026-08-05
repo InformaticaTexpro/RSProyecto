@@ -2,11 +2,22 @@
 
 /**
  * app-sidebar.js
- * Sidebar central basado en catálogo completo de menús activos.
- * - Todos los módulos se muestran.
- * - El acceso se controla al entrar, no al visualizar.
+ * Sidebar central basado en el catálogo de menús activos.
+ * Los administradores tienen acceso total. Los demás usuarios acceden por
+ * menús asignados y, como compatibilidad, por el área declarada del módulo.
  */
 (function () {
+
+
+  const NO_ACCESS_URL = '/src/modulo/varios/sin-acceso/index.html';
+  const GERENCIA_LEGACY_URL = '/src/modulo/gerencia/index.html';
+
+  window.__APP_SIDEBAR_LOADED__ = true;
+
+  const EXTRA_ITEMS = [
+    { id: 'extra-alertas', codigo: 'alertas', nombre: 'Alertas', url: '/src/modulo/varios/alertas/index.html', icono: '🔔', grupo: 'General', orden: 1, extra: true },
+  ];
+
   window.__APP_SIDEBAR_LOADED__ = true;
   const FEATURE_FLAGS = {
     alertas: true,
@@ -87,12 +98,25 @@
     document.head.appendChild(script);
   }
 
+
+  // Catálogo temporal hasta registrar estos menús en la fuente real de permisos.
+  const GERENCIA_FALLBACK_MENUS = [
+    { id: 'gerencia-dashboard-comercial', codigo: 'gerencia-dashboard-comercial', nombre: 'Dashboard', url: '/src/modulo/gerencia/dashboard-comercial/index.html', icono: '📊', grupo: 'Gerencia', subgrupo: 'Comercial', ordenGrupo: 80, ordenSubgrupo: 1, orden: 1 },
+    { id: 'gerencia-estadisticas-ventas', codigo: 'gerencia-estadisticas-ventas', nombre: 'Estadísticas de Ventas', url: '/src/modulo/gerencia/comercial/estadisticas-ventas/index.html', icono: '📈', grupo: 'Gerencia', subgrupo: 'Comercial', ordenGrupo: 80, ordenSubgrupo: 1, orden: 2 },
+    { id: 'gerencia-dashboard-finanzas', codigo: 'gerencia-dashboard-finanzas', nombre: 'Dashboard', url: '/src/modulo/gerencia/dashboard-finanzas/index.html', icono: '💰', grupo: 'Gerencia', subgrupo: 'Finanzas', ordenGrupo: 80, ordenSubgrupo: 2, orden: 1 },
+  ];
+
   function normalizarTexto(valor) {
     return String(valor || '')
       .trim()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
   }
+
+  function normalizarArea(valor) {
+    return normalizarTexto(valor).toLowerCase();
+  }
+
 
   function normalizarUrl(url) {
     let valor = String(url || '').trim();
@@ -109,24 +133,43 @@
 
   function normalizarMenus(menus) {
     return (menus || [])
+      .filter(menu => normalizarUrl(menu?.url) !== GERENCIA_LEGACY_URL)
       .map(menu => ({
         id: menu?.id ?? null,
         codigo: normalizarTexto(menu?.codigo),
         nombre: String(menu?.nombre || '').trim(),
         url: normalizarUrl(menu?.url),
         icono: String(menu?.icono || '').trim() || '•',
+
+        grupo: String(menu?.grupo || 'General').trim() || 'General',
+        subgrupo: String(menu?.subgrupo || '').trim(),
+        ordenGrupo: Number(menu?.ordenGrupo ?? menu?.orden ?? 0) || 0,
+        ordenSubgrupo: Number(menu?.ordenSubgrupo ?? 0) || 0,
+
         grupo: (() => {
           const codigo = normalizarTexto(menu?.codigo);
           const grupo = String(menu?.grupo || 'General').trim() || 'General';
           if (codigo === 'rrhh' || codigo === 'rrhh_reportes_compartidos') return 'RRHH';
           return grupo;
         })(),
+
         orden: Number(menu?.orden ?? 0) || 0,
         extra: Boolean(menu?.extra),
       }))
       .filter(menu => menu.id !== null && menu.nombre && menu.url)
       .filter(menu => (FEATURE_FLAGS.mensajeria ? true : menu.codigo !== 'mensajeria'))
       .filter(menu => (FEATURE_FLAGS.alertas ? true : menu.codigo !== 'alertas'));
+  }
+
+  function esAdmin(usuario) {
+    return usuario?.is_admin === true
+      || usuario?.is_admin === 1
+      || usuario?.is_admin === '1'
+      || normalizarArea(usuario?.area) === 'admin';
+  }
+
+  function esAreaGerencia(usuario) {
+    return normalizarArea(usuario?.area) === 'gerencia';
   }
 
   function construirCatalogo(allMenus) {
@@ -161,6 +204,18 @@
       }
     });
 
+    GERENCIA_FALLBACK_MENUS.forEach(item => {
+      const menu = normalizarMenus([item])[0];
+      if (!menu) return;
+      const existente = map.get(menu.url);
+      map.set(menu.url, {
+        ...existente,
+        ...menu,
+        id: existente?.id ?? menu.id,
+        codigo: existente?.codigo || menu.codigo,
+      });
+    });
+
     return Array.from(map.values());
   }
 
@@ -172,15 +227,20 @@
       if (!grupos.has(nombreGrupo)) {
         grupos.set(nombreGrupo, {
           nombre: nombreGrupo,
+
+          orden: Number.isFinite(menu.ordenGrupo) ? menu.ordenGrupo : 0,
+          icono: menu.icono || '📁',
+
           orden: Number.isFinite(menu.orden) ? menu.orden : 0,
           icono: GROUP_ICONS[nombreGrupo] || menu.icono || '📁',
+
           items: [],
         });
       }
 
       const grupo = grupos.get(nombreGrupo);
       grupo.items.push(menu);
-      grupo.orden = Math.min(grupo.orden, Number.isFinite(menu.orden) ? menu.orden : 0);
+      grupo.orden = Math.min(grupo.orden, Number.isFinite(menu.ordenGrupo) ? menu.ordenGrupo : 0);
       if (!grupo.icono && menu.icono) grupo.icono = menu.icono;
     });
 
@@ -192,8 +252,13 @@
       .sort((a, b) => (a.orden - b.orden) || a.nombre.localeCompare(b.nombre, 'es'));
   }
 
-  function crearIndicePermisos(permisos) {
+  function crearIndicePermisos(permisos, usuario, catalogo) {
     const permitidos = normalizarMenus(permisos);
+    if (esAdmin(usuario)) {
+      permitidos.push(...normalizarMenus(catalogo));
+    } else if (esAreaGerencia(usuario)) {
+      permitidos.push(...normalizarMenus(GERENCIA_FALLBACK_MENUS));
+    }
     const ids = new Set();
     const codigos = new Set();
     const urls = new Set();
@@ -673,6 +738,23 @@
       .nav-subitem.is-locked { color:rgba(255,255,255,.42) !important; }
       .nav-subitem.is-locked:hover { color:rgba(255,255,255,.72) !important; }
       .nav-subitem .nav-label { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .nav-nested { display:flex; flex-direction:column; gap:2px; }
+      .nav-nested-btn {
+        width:100%; display:flex; align-items:center; gap:8px; min-height:32px;
+        padding:7px 9px; border:0; border-radius:7px;
+        background:transparent; color:rgba(255,255,255,.66);
+        font:inherit; font-size:.8rem; font-weight:700; text-align:left; cursor:pointer;
+      }
+      .nav-nested-btn:hover,
+      .nav-nested-btn.is-open { background:rgba(255,255,255,.07); color:#fff; }
+      .nav-nested-label { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .nav-nested-chevron { font-size:.66rem; opacity:.7; transition:transform .16s; }
+      .nav-nested-btn.is-open .nav-nested-chevron { transform:rotate(90deg); }
+      .nav-level-three {
+        display:none; flex-direction:column; gap:2px; margin:0 0 3px 14px;
+        padding-left:8px; border-left:1px solid rgba(255,255,255,.12);
+      }
+      .nav-nested.is-open .nav-level-three { display:flex; }
       .nav-extra-badge {
         display:inline-flex; align-items:center; justify-content:center;
         min-width:18px; height:18px; margin-left:auto; padding:0 5px;
@@ -682,6 +764,8 @@
       .sidebar--collapsed .nav-module-label,
       .sidebar--collapsed .nav-module-chevron,
       .sidebar--collapsed .nav-module-lock,
+      .sidebar--collapsed .nav-nested-label,
+      .sidebar--collapsed .nav-nested-chevron,
       .sidebar--collapsed .nav-subitems { display:none !important; }
       .sidebar--collapsed .nav-module-btn { justify-content:center; padding-inline:6px; }
       .sidebar-drawer-overlay {
@@ -771,6 +855,56 @@
     `;
     document.head.appendChild(style);
   }
+
+
+  function renderEnlace(item, indicePermisos) {
+    const permitido = item.extra ? true : tienePermiso(item, indicePermisos);
+    const href = permitido ? item.url : urlSinAcceso(item, rutaActual());
+    return `
+      <a class="nav-subitem ${itemActivo(item) ? 'active' : ''} ${permitido ? '' : 'is-locked'}" href="${href}">
+        <span>${item.icono}</span>
+        <span class="nav-label">${item.nombre}</span>
+        ${permitido ? '' : '<span class="nav-module-lock" title="Sin acceso">🔒</span>'}
+        ${item.extra ? '<span class="nav-extra-badge" id="navBadgeAlertas" style="display:none">0</span>' : ''}
+      </a>
+    `;
+  }
+
+  function renderItemsGrupo(grupo, indicePermisos) {
+    const itemsDirectos = grupo.items.filter(item => !item.subgrupo);
+    const subgrupos = new Map();
+    grupo.items.filter(item => item.subgrupo).forEach(item => {
+      if (!subgrupos.has(item.subgrupo)) {
+        subgrupos.set(item.subgrupo, {
+          nombre: item.subgrupo,
+          orden: item.ordenSubgrupo,
+          items: [],
+        });
+      }
+      subgrupos.get(item.subgrupo).items.push(item);
+    });
+
+    const anidados = Array.from(subgrupos.values())
+      .sort((a, b) => (a.orden - b.orden) || a.nombre.localeCompare(b.nombre, 'es'))
+      .map(subgrupo => {
+        const abierto = subgrupo.items.some(itemActivo);
+        return `
+          <div class="nav-nested ${abierto ? 'is-open' : ''}">
+            <button class="nav-nested-btn ${abierto ? 'is-open' : ''}" type="button" aria-expanded="${abierto ? 'true' : 'false'}">
+              <span class="nav-nested-label">${subgrupo.nombre}</span>
+              <span class="nav-nested-chevron">▶</span>
+            </button>
+            <div class="nav-level-three">
+              ${subgrupo.items.map(item => renderEnlace(item, indicePermisos)).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+    return [
+      ...itemsDirectos.map(item => renderEnlace(item, indicePermisos)),
+      ...anidados,
+    ].join('');
 
   const SIDEBAR_OPEN_CLASSES = ['sidebar--open', 'sidebar--mobile-open', 'mobile-open'];
 
@@ -868,6 +1002,7 @@
       event.stopImmediatePropagation();
       closeSidebarDrawer();
     }, true);
+
   }
 
   function renderGrupo(grupo, indicePermisos) {
@@ -880,18 +1015,7 @@
           <span class="nav-module-chevron">▶</span>
         </button>
         <div class="nav-subitems">
-          ${grupo.items.map(item => {
-            const permitido = item.extra ? true : tienePermiso(item, indicePermisos);
-            const href = permitido ? item.url : urlSinAcceso(item, rutaActual());
-            return `
-              <a class="nav-subitem ${itemActivo(item) ? 'active' : ''} ${permitido ? '' : 'is-locked'}" href="${href}">
-                <span>${item.icono}</span>
-                <span class="nav-label">${item.nombre}</span>
-                ${permitido ? '' : '<span class="nav-module-lock" title="Sin acceso">🔒</span>'}
-                ${item.extra ? '<span class="nav-extra-badge" id="navBadgeAlertas" style="display:none">0</span>' : ''}
-              </a>
-            `;
-          }).join('')}
+          ${renderItemsGrupo(grupo, indicePermisos)}
         </div>
       </div>
     `;
@@ -907,7 +1031,7 @@
 
     const usuario = extraerUsuario(data);
     const catalogo = construirCatalogo(extraerCatalogo(data));
-    const indicePermisos = crearIndicePermisos(usuario?.menus);
+    const indicePermisos = crearIndicePermisos(usuario?.menus, usuario, catalogo);
     const grupos = agruparMenus(catalogo);
 
     if (!grupos.length) {
@@ -1597,6 +1721,17 @@
     refs.full.addEventListener('click', () => {
       window.location.href = '/src/modulo/varios/mensajeria/index.html';
     });
+
+    nav.querySelectorAll('.nav-nested-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const subgrupo = btn.closest('.nav-nested');
+        const open = !subgrupo.classList.contains('is-open');
+        subgrupo.classList.toggle('is-open', open);
+        btn.classList.toggle('is-open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    });
+
     refs.search.addEventListener('input', event => {
       chatState.search = event.target.value || '';
       renderList();
@@ -1612,6 +1747,7 @@
     openWidget(false);
     loadData();
     setInterval(loadUnread, 60000);
+
   }
 
   async function obtenerContextoSidebar() {
@@ -1647,7 +1783,7 @@
 
     const usuario = extraerUsuario(data);
     const catalogo = construirCatalogo(extraerCatalogo(data));
-    const indicePermisos = crearIndicePermisos(usuario?.menus);
+    const indicePermisos = crearIndicePermisos(usuario?.menus, usuario, catalogo);
     validarAccesoPaginaActual(catalogo, usuario, indicePermisos);
     renderSidebar(data);
     crearWidgetMensajeriaGlobal(data);
@@ -1659,5 +1795,8 @@
   } else {
     init();
   }
+
+
 })();
+
 
