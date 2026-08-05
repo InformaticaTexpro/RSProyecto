@@ -2,9 +2,9 @@
 
 /**
  * app-sidebar.js
- * Sidebar central basado en catálogo completo de menús activos.
- * - Todos los módulos se muestran.
- * - El acceso se controla al entrar, no al visualizar.
+ * Sidebar central basado en el catálogo de menús activos.
+ * Los administradores tienen acceso total. Los demás usuarios acceden por
+ * menús asignados y, como compatibilidad, por el área declarada del módulo.
  */
 (function () {
 
@@ -449,4 +449,4 @@
   } else {
     init();
   }
-})();
+
